@@ -39,3 +39,7 @@ Arjuna is developed by a three person team from Gadjah Mada University, Indonesi
 * Ilham Imaduddin
 * Ahmad Shalahuddin
 * Piquitha Della Audyna
+
+## License
+
+This project is licensed under the terms of the [MIT License](http://opensource.org/licenses/MIT).
