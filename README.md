@@ -9,11 +9,13 @@ Arjuna has two main parts, the MPU (MIDI Processing Unit) and the Hands Module.
 Here’s the components for both parts:
 
 #### MIDI Processing Unit
+
 1. [ODROID-C1](http://www.hardkernel.com/main/products/prdt_info.php?g_code=G141578608433)
 2. nRF24L01+ Transceiver Module
 3. Keypad
 
 #### Hands Module
+
 1. [Arduino Pro Micro](https://www.sparkfun.com/products/12640)
 2. nRF24L01+ Transceiver Module
 3. Small Vibration Motor
@@ -22,10 +24,17 @@ Here’s the components for both parts:
 6. 3D Printed Ring
 7. 3D Printed Case
 
-## Assembly
+## Documentation
 
-For the complete instruction, please read the [assembly guide](https://github.com/ArjunaElins/Arjuna/blob/master/Docs/assembly.md).
+* [Assembly Guide](https://github.com/ArjunaElins/Arjuna/blob/master/Docs/Assembly.md)
+* [Installation Guide](https://github.com/ArjunaElins/Arjuna/blob/master/Docs/Installation.md)
+* [How It Works](https://github.com/ArjunaElins/Arjuna/blob/master/Docs/HowItWorks.md)
+* [About The Project](https://github.com/ArjunaElins/Arjuna/blob/master/Docs/About.md)
 
-## Installation
+## Developer
 
-For the complete instruction, please read the [installation guide](https://github.com/ArjunaElins/Arjuna/blob/master/Docs/installation.md).
+Arjuna is developed by a three person team from Gadjah Mada University, Indonesia.
+
+* Ilham Imaduddin
+* Ahmad Shalahuddin
+* Piquitha Della Audyna
