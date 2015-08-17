@@ -3,11 +3,8 @@ MIDI Processing Unit
 
 This is the source code of Arjuna's MIDI Processing Unit (MPU).
 
-## Installation
-
-Install required dependencies:
+Install the MIDI Processing Unit:
 
 ```
-git submodule init
-git submodule update
+make
 ```
