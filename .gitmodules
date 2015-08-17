@@ -1,0 +1,12 @@
+[submodule "Software/MPU/lib/RF24-OdroidC1"]
+	path = Software/MPU/lib/RF24-OdroidC1
+	url = git@github.com:ilhamadun/RF24-OdroidC1.git
+[submodule "Software/MPU/lib/WiringPiKeypad"]
+	path = Software/MPU/lib/WiringPiKeypad
+	url = git@github.com:ilhamadun/WiringPiKeypad.git
+[submodule "Software/MPU/lib/rtmidi"]
+	path = Software/MPU/lib/rtmidi
+	url = git@github.com:thestk/rtmidi.git
+[submodule "Software/MPU/lib/midifile"]
+	path = Software/MPU/lib/midifile
+	url = git@github.com:craigsapp/midifile.git
