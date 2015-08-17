@@ -38,9 +38,9 @@
 #include <thread>
 #include <fstream>
 #include <wiringPi.h>
-#include "lib/midifile/MidiFile.h"
-#include "lib/WiringPiKeypad/WiringPiKeypad.h"
-#include "lib/RF24-OdroidC1/ORF24.h"
+#include "MidiFile.h"
+#include "WiringPiKeypad.h"
+#include "ORF24.h"
 #include "MidiIO.h"
 #include "FingerData.h"
 

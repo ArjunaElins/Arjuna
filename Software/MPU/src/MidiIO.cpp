@@ -133,7 +133,7 @@ void MidiIO::listMidiOutPort(void)
 			exit(EXIT_FAILURE);
 		}
 
-		std::cout << " Output port #" << i + 1 << ": " << portName << std::cout;
+		std::cout << " Output port #" << i + 1 << ": " << portName << std::endl;
 	}
 }
 

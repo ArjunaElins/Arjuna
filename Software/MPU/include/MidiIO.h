@@ -32,7 +32,7 @@
  */
 
 #include <iostream>
-#include "../lib/rtmidi/RtMidi.h"
+#include "RtMidi.h"
 
 class MidiIO
 {
