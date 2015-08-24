@@ -29,8 +29,8 @@
  */
  
 #include <SPI.h>
-#include <printf.h>
 #include <RF24.h>
+#include <printf.h>
 
 class Motor
 {
@@ -126,6 +126,7 @@ void setup()
   radio.setAutoAck(1);
   radio.openReadingPipe(1, address);
   radio.startListening();
+  radio.printDetails();
   Serial.println("Radio is listening...");
 
   // Initializing Motor
@@ -140,8 +141,8 @@ void loop()
 {
   if (radio.available())
   {
-    while(radio.available());
-    {
+    while (radio.available())
+    { 
       radio.read(&data, 1);
 
       Serial.print("Data received: ");
@@ -149,12 +150,13 @@ void loop()
       parseCommand(data);
     }
   }
-  
+
   // Run Motor Timeout Controller
   for (int i = 0; i < MOTOR_COUNT; i++)
   {
     motor[i].timeoutControl();
   }
+  
 }
 
 /**
@@ -167,7 +169,7 @@ void parseCommand(byte message)
   byte command = message & 0xF0;
   byte channel = message & 0x0F;
 
-  if (channel > 9)
+  if (channel > MOTOR_COUNT - 1)
     return;
 
    switch(command)
@@ -208,3 +210,4 @@ void allMotorOff()
     motor[i].turnOff();
   }
 }
+
