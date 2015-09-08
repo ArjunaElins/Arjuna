@@ -36,6 +36,7 @@
 
 #include <iostream>
 #include <tclap/CmdLine.h>
+#include <wiringPi.h>
 
 struct Args {
 	bool debugEnabled;
@@ -63,5 +64,14 @@ int main(int argc, char *argv[]);
  * @return      parsed arguments
  */
 struct Args getArgs(int argc, char *argv[]);
+
+/**
+ * Initial Hardware Setup
+ *
+ * This function initialize the device to interface with hardware.
+ * 
+ * @return setup status
+ */
+int initHardware();
 
 #endif

@@ -34,6 +34,15 @@
 #include "Arjuna.h"
 
 /**
+ * Command Line Argument Container
+ *
+ * This global variable is used to contain command line arguments.
+ * It is parsed on the start of the application, and then used all over
+ * the code.
+ */
+struct Args args;
+
+/**
  * Main Function
  *
  * This is the starting point of the program.
@@ -44,7 +53,9 @@
  */
 int main(int argc, char *argv[])
 {
-	struct Args args = getArgs(argc, argv);
+	args = getArgs(argc, argv);
+
+	initHardware();
 
 	return 0;
 }
@@ -66,9 +77,29 @@ struct Args getArgs(int argc, char *argv[])
 
 	cmd.parse(argc, argv);
 
-	struct Args args;
-	args.debugEnabled = enableDebugSwitch.getValue();
-	args.keyboardEnabled = enableKeyboardSwitch.getValue();
+	struct Args parsedArgs;
+	parsedArgs.debugEnabled = enableDebugSwitch.getValue();
+	parsedArgs.keyboardEnabled = enableKeyboardSwitch.getValue();
 
-	return args;
+	return parsedArgs;
+}
+
+/**
+ * Initial Hardware Setup
+ *
+ * This function initialize the device to interface with hardware.
+ * Error is returned in status codes, which is:
+ * 1 - WiringPi Initialization Error
+ * 
+ * @return setup status
+ */
+int initHardware()
+{
+	if (args.debugEnabled)
+		std::cout << "Setting up WiringPi..." << std::endl;
+
+	if (wiringPiSetup())
+		return 1;
+
+	return 0;
 }
