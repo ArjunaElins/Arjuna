@@ -32,6 +32,10 @@
 #include <RF24.h>
 #include <printf.h>
 
+#define RIGHT_HAND  "ArS01"
+#define LEFT_HAND   "ArS02"
+#define ADDRESS     LEFT_HAND
+
 class Motor
 {
   enum MotorStatus{OFF, ON};
@@ -112,7 +116,7 @@ int motorPin[MOTOR_COUNT] = {1, 0, 2, 3, 4, 5, 6, 7, 8, 9};
 void setup()
 {
   /* Initialize RF Address */
-  byte address[6] = "ArS01";
+  byte address[6] = ADDRESS;
 
   /* Initialize serial communication */
   Serial.begin(9600);
