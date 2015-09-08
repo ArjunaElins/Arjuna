@@ -35,61 +35,33 @@
 #define _ARJUNA_H_
 
 #include <iostream>
-#include <thread>
-#include <fstream>
-#include <wiringPi.h>
-#include "MidiFile.h"
-#include "WiringPiKeypad.h"
-#include "ORF24.h"
-#include "MidiIO.h"
-#include "FingerData.h"
+#include <tclap/CmdLine.h>
 
-struct Key
-{
-	int track;
-	unsigned char note;
-	unsigned char finger;
+struct Args {
+	bool debugEnabled;
+	bool keyboardEnabled;
 };
 
-enum PlayMode {PLAY_ALL, PLAY_CHECKPOINT, EVALUATE_ALL, EVALUATE_CHECKPOINT};
-enum Hand {RIGHT_HAND, LEFT_HAND};
-
+/**
+ * Main Function
+ *
+ * This is the starting point of the program.
+ * 
+ * @param  argc arg count
+ * @param  argv arg vector
+ * @return      status
+ */
 int main(int argc, char *argv[]);
-void menu(void);
 
-/*
- |------------------------------------------------
- | Initialization and cleanup 	
- |------------------------------------------------
+/**
+ * Get Command Line Arguments
+ *
+ * This function uses TCLAP library to parse command line arguments
+ * 
+ * @param  argc arguments count
+ * @param  argv arguments vector
+ * @return      parsed arguments
  */
-
-void initMidiIO(void);
-void initRadio(void);
-void initRadio(bool debug);
-void initKeypad(void);
-void cleanup(void);
-
-/*
- |------------------------------------------------
- | Player	
- |------------------------------------------------
- */
-
-std::string selectSong(void);
-void play(std::string songPath);
-void startPlayer(std::string songPath, PlayMode mode);
-void parseCommand(FingerEvent event, PlayMode mode, Hand hand);
-unsigned char inverse(unsigned char finger);
-void keypadHandler(char *keypress, bool *terminator);
-
-/*
- |------------------------------------------------
- | Evaluator	
- |------------------------------------------------
- */
-void evaluate(std::string songPath);
-void startEvaluator(std::string songPath, PlayMode mode);
-std::string getKey(int key);
-void parseCommand(Hand hand, unsigned char in, unsigned char note, char finger);
+struct Args getArgs(int argc, char *argv[]);
 
 #endif
