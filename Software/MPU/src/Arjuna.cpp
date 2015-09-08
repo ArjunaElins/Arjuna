@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 {
 	wiringPiSetup();
 	initMidiIO();
-	initRadio(true);
+	initRadio();
 	initKeypad();
 
 	char keypress;
@@ -94,7 +94,7 @@ void initMidiIO(void)
 	io->openMidiOutPort();
 	io->openMidiInPort();
 
-	std::cout << "MIDI I/O iniitlized.\n";
+	std::cout << "MIDI I/O initialized.\n";
 }
 
 void initRadio(void)
