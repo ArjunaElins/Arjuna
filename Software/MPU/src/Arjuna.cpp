@@ -79,6 +79,8 @@ void startRoutine(struct Container *container)
 
 		if (keypress == '*')
 			songPath.assign(songSelector(container));
+		else if (keypress == '0')
+			songPlayer(container, songPath);
 	}
 }
 
@@ -177,4 +179,70 @@ std::string selectSong(struct Container *container, std::ifstream *songList)
 	std::cout << "Selected: " << song << std::endl;
 
 	return song;
+}
+
+/**
+ * Song Player
+ *
+ * This method is used to play MIDI song. It will open the MIDI file,
+ * calculate some numbers, and send MIDI message to output port
+ * 
+ * @param  container hardware handler
+ * @param  songPath  MIDI song location
+ */
+void songPlayer(struct Container *container, std::string songPath)
+{
+	std::cout << "Playing song \"" << songPath << "\"...\n";
+	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
+
+	MidiFile midi(songPath + ".mid");
+	midi.deltaTicks();
+	midi.joinTracks();
+
+	int tpq = midi.getTicksPerQuarterNote();
+	double spt = 0.5 / tpq;
+
+	for (int t = 0; t < midi.getTrackCount(); t++)
+	{
+		for (int e = 0; e < midi[t].size(); e++)
+		{
+			getTempoSPT(midi[t][e], tpq, &spt);
+
+			if (midi[t][e].isMeta()) continue;
+
+			delayMicroseconds(spt * midi[t][e].tick * 1000000);
+			sendMidiMessage(container->io, midi[t][e]);
+		}
+	}
+}
+
+/**
+ * Get Tempo in Second Per Tick
+ * 	
+ * @param e   	MidiEvent
+ * @param tpq 	tick peq quarter
+ * @param spt 	second per tick
+ */
+void getTempoSPT(MidiEvent e, int tpq, double *spt)
+{
+	if (e.getTempoSPT(tpq) > 0)
+		*spt = e.getTempoSPT(tpq);
+}
+
+/**
+ * Send MIDI Message
+ *
+ * This method will form a MIDI message container and send it to MIDI output port
+ * 
+ * @param io MIDI i/O port
+ * @param e  MIDI event
+ */
+void sendMidiMessage(MidiIO *io, MidiEvent e)
+{
+	std::vector<unsigned char> message;
+
+	for (unsigned int i = 0; i < e.size(); i++)
+		message.push_back((int) e[i]);
+
+	io->sendMessage(&message);
 }

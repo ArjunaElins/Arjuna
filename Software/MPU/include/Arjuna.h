@@ -39,6 +39,7 @@
 #include <string>
 
 #include "Setup.h"
+#include "MidiFile.h"
 
 /**
  * Main Function
@@ -94,5 +95,35 @@ void printSongList(std::ifstream *songList);
  * @return          song name
  */
 std::string selectSong(struct Container *container, std::ifstream *songList);
+
+/**
+ * Song Player
+ *
+ * This method is used to play MIDI song. It will open the MIDI file,
+ * calculate some numbers, and send MIDI message to output port
+ * 
+ * @param  container hardware handler
+ * @param  songPath  MIDI song location
+ */
+void songPlayer(struct Container *container, std::string songPath);
+
+/**
+ * Get Tempo in Second Per Tick
+ * 	
+ * @param e   	MidiEvent
+ * @param tpq 	tick peq quarter
+ * @param spt 	second per tick
+ */
+void getTempoSPT(MidiEvent e, int tpq, double *spt);
+
+/**
+ * Send MIDI Message
+ *
+ * This method will form a MIDI message container and send it to MIDI output port
+ * 
+ * @param io MIDI i/O port
+ * @param e  MIDI event
+ */
+void sendMidiMessage(MidiIO *io, MidiEvent e);
 
 #endif
