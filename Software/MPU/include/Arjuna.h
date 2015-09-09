@@ -99,4 +99,19 @@ int radioSetup(void);
  */
 int keypadSetup(void);
 
+/**
+ * Start Application Routine
+ *
+ * This routine start by showing main menu. It will handle user input
+ * and call other methods depending on the input.
+ */
+void startRoutine(void);
+
+/**
+ * Show Application Menu
+ *
+ * In this screen, user can select the application operation.
+ */
+void showMenu(void)
+
 #endif

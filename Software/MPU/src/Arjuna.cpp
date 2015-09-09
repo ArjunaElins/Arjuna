@@ -85,6 +85,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	startRoutine();
+
 	return 0;
 }
 
@@ -229,4 +231,38 @@ int keypadSetup(void)
 	keypad->setMatrix(matrix);
 
 	return 0;
+}
+
+/**
+ * Start Application Routine
+ *
+ * This routine start by showing main menu. It will handle user input
+ * and call other methods depending on the input.
+ */
+void startRoutine(void)
+{
+	char keypress;
+	std::string songPath;
+
+	while (1)
+	{
+		showMenu();
+		keypress = keypad->getKey();
+
+		// Operation selector here
+	}
+}
+
+/**
+ * Show Application Menu
+ *
+ * In this screen, user can select the application operation.
+ */
+void showMenu(void)
+{
+	std::cout << "Welcome to Arjuna. Please select mode of operation below:"
+	std::cout << " A - Select Song\n"
+			  << " B - Play Song \n"
+			  << " C - Start Evaluating\n"
+			  << " D - Exit\n";
 }
