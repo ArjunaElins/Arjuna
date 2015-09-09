@@ -31,30 +31,64 @@
  * 
  */
 
+#ifndef _MIDI_IO_H_
+#define _MIDI_IO_H_
+
 #include <iostream>
 #include "RtMidi.h"
 
+/**
+ * MidiIO Class Interface
+ *
+ * MidiIO is a class to interface with MIDI device. It allows the application
+ * to open and close input and output port with the MIDI device, and send them
+ * MIDI messages.
+ */
 class MidiIO
 {
 private:
+	/**
+	 * Input Port Number
+	 */
 	unsigned int inPort;
-	unsigned int outPort;
-	RtMidiIn *in = 0;
-	RtMidiOut *out = 0;
 
+	/**
+	 * Output Port Number
+	 */
+	unsigned int outPort;
+
+	/**
+	 * RtMidi Input instance
+	 */
+	RtMidiIn *in;
+
+	/**
+	 * RtMidi Output instance
+	 */
+	RtMidiOut *out;
+
+	/**
+	 * Initialize MIDI IO
+	 *
+	 * This method creates RtMidi input and output instance;
+	 */
 	void initIO(void);
 
 public:
+	/**
+	 * MidiIO Class Constructor
+	 *
+	 * This constructor set the default input and output port
+	 */
 	MidiIO();
+
+	/**
+	 * MidiIO Class Constructor
+	 *
+	 * This constructor receive input and output port as arguments and set
+	 * those ports to the class properties.
+	 */
 	MidiIO(int in, int out);
-	void listMidiInPort(void);
-	void listMidiOutPort(void);
-	int openMidiInPort(void);
-	int openMidiInPort(int port);
-	int openMidiOutPort(void);
-	int openMidiOutPort(int port);
-	void sendMessage(std::vector<unsigned char> *message);
-	void setCallback(RtMidiIn::RtMidiCallback callback);
-	void setCallback(RtMidiIn::RtMidiCallback callback, void *userData);
-	double getMessage(std::vector<unsigned char> *message);
 };
+
+#endif
