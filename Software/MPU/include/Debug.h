@@ -31,84 +31,54 @@
  * 
  */
 
-#ifndef _MIDI_IO_H_
-#define _MIDI_IO_H_
-
-#include <iostream>
- 
-#include "Debug.h"
-#include "RtMidi.h"
+#ifndef _DEBUG_H_
+#define _DEBUG_H_
 
 /**
- * MidiIO Class Interface
- *
- * MidiIO is a class to interface with MIDI device. It allows the application
- * to open and close input and output port with the MIDI device, and send them
- * MIDI messages.
+ * Define Debug Level
  */
-class MidiIO
+enum DebugLevel {NONE, LOW, HIGH};
+
+/**
+ * Check If Debug Level is None
+ * 
+ * @param  level  debug level
+ * @return        boolean
+ */
+bool isDebugNone(DebugLevel level)
 {
-private:
+	if (DebugLevel == NONE)
+		return true
+	else
+		return false;	
+}
 
-	/**
-	 * Input Port Number
-	 */
-	unsigned int inPort;
+/**
+ * Check If Debug Level is Low
+ * 
+ * @param  level  debug level
+ * @return        boolean
+ */
+bool isDebugLow(DebugLevel level)
+{
+	if (DebugLevel >= LOW)
+		return true
+	else
+		return false;	
+}
 
-	/**
-	 * Output Port Number
-	 */
-	unsigned int outPort;
-
-	/**
-	 * Debug Level
-	 *
-	 * The higher the level, more information will be shown
-	 */
-	DebugLevel debugLevel;
-
-	/**
-	 * RtMidi Input instance
-	 */
-	RtMidiIn *in;
-
-	/**
-	 * RtMidi Output instance
-	 */
-	RtMidiOut *out;
-
-	/**
-	 * Initialize MIDI IO
-	 *
-	 * This method creates RtMidi input and output instance
-	 */
-	void initIO(void);
-
-public:
-	/**
-	 * MidiIO Class Constructor
-	 *
-	 * This constructor set the default input and output port
-	 */
-	MidiIO();
-
-	/**
-	 * MidiIO Class Constructor
-	 *
-	 * This constructor receive input and output port as arguments and set
-	 * those ports to the class properties.
-	 *
-	 * @param  int 	in 	input port
-	 * @param  int 	out	output port
-	 */
-	MidiIO(int in, int out);
-
-	/**
-	 * Set Debug Level
-	 *
-	 * @param  DebugLevel  level  debug level
-	 */
-	void setDebugLevel(DebugLevel level);
-};
+/**
+ * Check If Debug Level is High
+ * 
+ * @param  level  debug level
+ * @return        boolean
+ */
+bool isDebugHigh(DebugLevel level)
+{
+	if (DebugLevel == HIGH)
+		return true
+	else
+		return false;	
+}
 
 #endif
