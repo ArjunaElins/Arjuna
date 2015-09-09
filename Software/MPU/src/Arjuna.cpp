@@ -195,11 +195,17 @@ void songPlayer(struct Container *container, std::string songPath)
 	std::cout << "Playing song \"" << songPath << "\"...\n";
 	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
 
-	MidiFile midi = prepareMidi(songPath);
-
+	// MIDI data preparation
+	MidiFile midi(songPath + ".mid");
+	midi.deltaTicks();
 	int tpq = midi.getTicksPerQuarterNote();
 	double spt = 0.5 / tpq;
 
+	// Finger data preparation
+	FingerData finger(songPath + ".fgr");
+	std::vector<int> iFinger(midi.getTrackCount(), 0);
+
+	midi.joinTracks();
 	delay(500);
 	for (int t = 0; t < midi.getTrackCount(); t++)
 	{
@@ -209,25 +215,12 @@ void songPlayer(struct Container *container, std::string songPath)
 
 			if (midi[t][e].isMeta()) continue;
 
+			skipFingerMetadata(finger, &iFinger, midi.getSplitTrack(t, e));
 			delayMicroseconds(spt * midi[t][e].tick * 1000000);
 			sendMidiMessage(container->io, midi[t][e]);
+			sendFeedback(container->rf, finger, &iFinger, midi.getSplitTrack(t, e));
 		}
 	}
-}
-
-/**
- * Prepare MIDI data before use
- * 
- * @param  songPath MIDI song location
- * @return          MIDI container
- */
-MidiFile prepareMidi(std::string songPath)
-{
-	MidiFile midi(songPath + ".mid");
-	midi.deltaTicks();
-	midi.joinTracks();
-
-	return midi;
 }
 
 /**
@@ -259,4 +252,80 @@ void sendMidiMessage(MidiIO *io, MidiEvent e)
 		message.push_back((int) e[i]);
 
 	io->sendMessage(&message);
+}
+
+/**
+ * Skip Finger Metadata
+ * 
+ * @param finger finger data
+ * @param i      finger index
+ * @param t      active track
+ */
+void skipFingerMetadata(FingerData finger, std::vector<int> *i, int t)
+{
+	FingerEvent e = finger[t][i->at(t)];
+
+	if (e.getCommand() == 0xF9)
+		i->at(t)++;
+}
+
+/**
+ * Send Feedback to Hand Module
+ *
+ * This method use the radio transceiver to send payload to hand module
+ * 
+ * @param rf radio handler
+ * @param f  finger data
+ * @param i  finger index
+ * @param t  active track
+ */
+void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t)
+{
+	FingerEvent e = f[t][i->at(t)];
+	unsigned char command = e.getCommand();
+	unsigned char finger = e.getData();
+	unsigned char payload = 0;
+
+	if (t) // Left hand
+	{
+		rf->openWritingPipe("ArS02");
+	}
+	else // Right hand
+	{
+		finger = inverse(finger);
+		rf->openWritingPipe("ArS01");
+	}
+
+	if (command == 0x80 || command == 0x90)
+	{
+		payload = command | (finger - 1) * 2;
+		rf->write(&payload, 1);
+	}
+
+	i->at(t)++;
+}
+
+/**
+ * Inverse Finger Number
+ *
+ * Command for right hand module need to be inverted before sending.
+ * This function will do the inversion.
+ * 
+ * @param  finger finger number
+ * @return        inverted finger number
+ */
+unsigned char inverse(unsigned char finger)
+{
+	unsigned char inv = 0;
+
+	switch (finger)
+	{
+		case 1:		inv = 5;	break;
+		case 2:		inv = 4;	break;
+		case 3:		inv = 3;	break;
+		case 4:		inv = 2;	break;
+		case 5:		inv = 1;	break;	
+	}
+
+	return inv;
 }

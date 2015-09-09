@@ -40,6 +40,7 @@
 
 #include "Setup.h"
 #include "MidiFile.h"
+#include "FingerData.h"
 
 /**
  * Main Function
@@ -108,14 +109,6 @@ std::string selectSong(struct Container *container, std::ifstream *songList);
 void songPlayer(struct Container *container, std::string songPath);
 
 /**
- * Prepare MIDI data before use
- * 
- * @param  songPath MIDI song location
- * @return          MIDI container
- */
-MidiFile prepareMidi(std::string songPath);
-
-/**
  * Get Tempo in Second Per Tick
  * 	
  * @param e   	MidiEvent
@@ -133,5 +126,37 @@ void getTempoSPT(MidiEvent e, int tpq, double *spt);
  * @param e  MIDI event
  */
 void sendMidiMessage(MidiIO *io, MidiEvent e);
+
+/**
+ * Skip Finger Metadata
+ * 
+ * @param finger finger data
+ * @param i      finger index
+ * @param t      active track
+ */
+void skipFingerMetadata(FingerData finger, std::vector<int> *i, int t);
+
+/**
+ * Send Feedback to Hand Module
+ *
+ * This method use the radio transceiver to send payload to hand module
+ * 
+ * @param rf radio handler
+ * @param f  finger data
+ * @param i  finger index
+ * @param t  active track
+ */
+void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t);
+
+/**
+ * Inverse Finger Number
+ *
+ * Command for right hand module need to be inverted before sending.
+ * This function will do the inversion.
+ * 
+ * @param  finger finger number
+ * @return        inverted finger number
+ */
+unsigned char inverse(unsigned char finger);
 
 #endif
