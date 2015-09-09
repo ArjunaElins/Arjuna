@@ -83,14 +83,14 @@ int initHardware(void);
  * 
  * @return  status
  */
-int MidiIOSetup(void);
+int midiIOSetup(void);
 
 /**
  * Setup nRf24L01+ Radio Transceiver
  * 
  * @return  status
  */
-int RadioSetup(void);
+int radioSetup(void);
 
 /**
  * Setup keypad matrix

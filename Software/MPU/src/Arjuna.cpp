@@ -130,19 +130,19 @@ int initHardware(void)
 		return -1;
 	}
 
-	if (MidiIOSetup())
+	if (midiIOSetup())
 	{
 		std::cout << "Failed to set up MIDI I/O." << std::endl;
 		return -1;
 	}
 
-	if (RadioSetup())
+	if (radioSetup())
 	{
 		std::cout << "Failed to set up radio transceiver." << std::endl;
 		return -1;
 	}
 
-	if (KeypadSetup())
+	if (keypadSetup())
 	{
 		std::cout << "Failed to set up keypad." << std::endl;
 		return -1;
@@ -156,7 +156,7 @@ int initHardware(void)
  * 
  * @return  status
  */
-int MidiIOSetup(void)
+int midiIOSetup(void)
 {
 	if (args.debugEnabled)
 		std::cout << "Setting up MIDI I/O..." << std::endl;
@@ -185,7 +185,7 @@ int MidiIOSetup(void)
  * 
  * @return  status
  */
-int RadioSetup(void)
+int radioSetup(void)
 {
 	if (args.debugEnabled)
 		std::cout << "Setting up radio transceiver..." << std::endl;
