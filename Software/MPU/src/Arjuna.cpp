@@ -63,7 +63,11 @@ int main(int argc, char *argv[])
 {
 	args = getArgs(argc, argv);
 
-	initHardware();
+	if (initHardware())
+	{
+		std::cout << "Program is exiting..." << std::endl;
+		return -1;
+	}
 
 	return 0;
 }
@@ -96,8 +100,6 @@ struct Args getArgs(int argc, char *argv[])
  * Initial Hardware Setup
  *
  * This function initialize the device to interface with hardware.
- * Error is returned in status codes, which is:
- * 1 - WiringPi Initialization Error
  * 
  * @return setup status
  */
@@ -107,10 +109,16 @@ int initHardware()
 		std::cout << "Setting up WiringPi..." << std::endl;
 
 	if (wiringPiSetup())
-		return 1;
+	{
+		std::cout << "Failed to set up WiringPi." << std::endl;
+		return -1;
+	}
 
 	if (MidiIOSetup())
-		return 1;
+	{
+		std::cout << "Failed to set up MIDI I/O." << std::endl;
+		return -1;
+	}
 
 	return 0;
 }
