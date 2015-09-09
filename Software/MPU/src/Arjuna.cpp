@@ -34,15 +34,6 @@
 #include "Arjuna.h"
 
 /**
- * Command Line Argument Container
- *
- * This global variable is used to contain command line arguments.
- * It is parsed on the start of the application, and then used all over
- * the code.
- */
-struct Args args;
-
-/**
  * Main Function
  *
  * This is the starting point of the program.
@@ -53,11 +44,11 @@ struct Args args;
  */
 int main(int argc, char *argv[])
 {
-	args = getArgs(argc, argv);
+	struct Args args = getArgs(argc, argv);
 
 	struct Container container;
 
-	if (initHardware(&container))
+	if (initHardware(&container, &args))
 	{
 		std::cout << "Program is exiting..." << std::endl;
 		return -1;
@@ -67,30 +58,6 @@ int main(int argc, char *argv[])
 	startRoutine(&container);
 
 	return 0;
-}
-
-/**
- * Get Command Line Arguments
- *
- * This function uses TCLAP library to parse command line arguments
- * 
- * @param  argc arguments count
- * @param  argv arguments vector
- * @return      parsed arguments
- */
-struct Args getArgs(int argc, char *argv[])
-{
-	TCLAP::CmdLine cmd("Arjuna: Piano Learning Device For The Visually Impaired", ' ', "1.0.0.alpha-1");
-	TCLAP::SwitchArg enableDebugSwitch("d", "debug", "Show debug information.", cmd, false);
-	TCLAP::SwitchArg enableKeyboardSwitch("k", "keyboard", "Enable keyboard input.", cmd, false);
-
-	cmd.parse(argc, argv);
-
-	struct Args parsedArgs;
-	parsedArgs.debugEnabled = enableDebugSwitch.getValue();
-	parsedArgs.keyboardEnabled = enableKeyboardSwitch.getValue();
-
-	return parsedArgs;
 }
 
 /**
@@ -111,7 +78,7 @@ void startRoutine(struct Container *container)
 		keypress = keypad->getKey();
 
 		if (keypress == 'A')
-			songPath = songSelector(container);
+			songPath.assign(songSelector(container));
 	}
 }
 
@@ -122,7 +89,7 @@ void startRoutine(struct Container *container)
  */
 void showMenu(void)
 {
-	std::cout << "Welcome to Arjuna. Please select mode of operation below:"
+	std::cout << "Welcome to Arjuna. Please select mode of operation below:" << std::endl;
 	std::cout << " A - Select Song\n"
 			  << " B - Play Song \n"
 			  << " C - Start Evaluating\n"
@@ -136,16 +103,16 @@ void showMenu(void)
  * 
  * @param container hardware handler
  */
-int songSelector(struct Container *container)
+std::string songSelector(struct Container *container)
 {
 	const std::string basedir = "/home/arjuna/Songs/";
 
-	ifstream songList(basedir + ".songList");
+	std::ifstream songList(basedir + ".songList");
 
 	if (songList.is_open())
 	{
-		printSongList(songList);
-		std::string song = selectSong(songList);
+		printSongList(&songList);
+		std::string song = selectSong(container, &songList);
 
 		return basedir + song + "/" + song;
 	}
@@ -164,7 +131,7 @@ int songSelector(struct Container *container)
  * 
  * @param songList [description]
  */
-void printSongList(ifstream &songList)
+void printSongList(std::ifstream *songList)
 {
 	std::cout << "Song list:" << std::endl;
 
@@ -185,7 +152,7 @@ void printSongList(ifstream &songList)
  * @param  songList song list handler
  * @return          song name
  */
-std::string selectSong(struct Container *container, ifstream &songList)
+std::string selectSong(struct Container *container, std::ifstream *songList)
 {
 	std::cout << "Press number to select song. Press 'A' to select." << std::endl;
 
@@ -200,13 +167,13 @@ std::string selectSong(struct Container *container, ifstream &songList)
 	} while (keypress != 'A');
 
 	songNumber.pop_back(); // Remove 'A' from songNumber
-	int number = std::stoi(sungNumber);
-	songList.clear();
-	songList.seekg(0, std::ios::beg);
+	int number = std::stoi(songNumber);
+	songList->clear();
+	songList->seekg(0, std::ios::beg);
 
 	std::string song;
 	for (int i = 0; i < number; i++)
-		getline(songList, song);
+		getline(*songList, song);
 	std::cout << "Selected: " << song << std::endl;
 
 	return song;

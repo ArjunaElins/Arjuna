@@ -33,6 +33,30 @@
 
 #include "Setup.h"
 
+/**
+ * Get Command Line Arguments
+ *
+ * This function uses TCLAP library to parse command line arguments
+ * 
+ * @param  argc arguments count
+ * @param  argv arguments vector
+ * @return      parsed arguments
+ */
+struct Args getArgs(int argc, char *argv[])
+{
+	TCLAP::CmdLine cmd("Arjuna: Piano Learning Device For The Visually Impaired", ' ', "1.0.0.alpha-1");
+	TCLAP::SwitchArg enableDebugSwitch("d", "debug", "Show debug information.", cmd, false);
+	TCLAP::SwitchArg enableKeyboardSwitch("k", "keyboard", "Enable keyboard input.", cmd, false);
+
+	cmd.parse(argc, argv);
+
+	struct Args parsedArgs;
+	parsedArgs.debugEnabled = enableDebugSwitch.getValue();
+	parsedArgs.keyboardEnabled = enableKeyboardSwitch.getValue();
+
+	return parsedArgs;
+}
+
  /**
  * Initial Hardware Setup
  *
@@ -40,9 +64,9 @@
  * 
  * @return setup status
  */
-int initHardware(struct Container *container)
+int initHardware(struct Container *container, struct Args *args)
 {
-	if (args.debugEnabled)
+	if (args->debugEnabled)
 		std::cout << "Setting up WiringPi..." << std::endl;
 
 	if (wiringPiSetup())
@@ -51,19 +75,19 @@ int initHardware(struct Container *container)
 		return -1;
 	}
 
-	if (midiIOSetup(container->io))
+	if (midiIOSetup(container->io, args))
 	{
 		std::cout << "Failed to set up MIDI I/O." << std::endl;
 		return -1;
 	}
 
-	if (radioSetup(container->rf))
+	if (radioSetup(container->rf, args))
 	{
 		std::cout << "Failed to set up radio transceiver." << std::endl;
 		return -1;
 	}
 
-	if (keypadSetup(container->keypad))
+	if (keypadSetup(container->keypad, args))
 	{
 		std::cout << "Failed to set up keypad." << std::endl;
 		return -1;
@@ -77,14 +101,14 @@ int initHardware(struct Container *container)
  * 
  * @return  status
  */
-int midiIOSetup(MidiIO *io)
+int midiIOSetup(MidiIO *io, struct Args *args)
 {
-	if (args.debugEnabled)
+	if (args->debugEnabled)
 		std::cout << "Setting up MIDI I/O..." << std::endl;
 
 	io = new MidiIO;
 
-	io->enableDebug(args.debugEnabled);
+	io->enableDebug(args->debugEnabled);
 	
 	if (io->openMidiOutPort())
 	{
@@ -106,14 +130,14 @@ int midiIOSetup(MidiIO *io)
  * 
  * @return  status
  */
-int radioSetup(ORF24 *rf)
+int radioSetup(ORF24 *rf, struct Args *args)
 {
-	if (args.debugEnabled)
+	if (args->debugEnabled)
 		std::cout << "Setting up radio transceiver..." << std::endl;
 
 	rf = new ORF24(21);
 
-	if (args.debugEnabled)
+	if (args->debugEnabled)
 		rf->enableDebug();
 
 	rf->begin();
@@ -130,9 +154,9 @@ int radioSetup(ORF24 *rf)
  * 
  * @return  status
  */
-int keypadSetup(WiringPiKeypad *keypad)
+int keypadSetup(WiringPiKeypad *keypad, struct Args *args)
 {
-	if (args.debugEnabled)
+	if (args->debugEnabled)
 		std::cout << "Setting up keypad matrix..." << std::endl;
 
 	int row[4] = {1, 2, 3, 4};

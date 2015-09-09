@@ -35,11 +35,20 @@
 #define _SETUP_H_
 
 #include <iostream>
+#include <tclap/CmdLine.h>
 #include <wiringPi.h>
 
 #include "MidiIO.h"
 #include "ORF24.h"
-#include "WiringPiKeypad"
+#include "WiringPiKeypad.h"
+
+/**
+ * A structure to contain command line arguments
+ */
+struct Args {
+	bool debugEnabled;
+	bool keyboardEnabled;
+};
 
 /**
  * Container is a struct to contain hardware handler
@@ -51,33 +60,44 @@ struct Container {
 };
 
 /**
+ * Get Command Line Arguments
+ *
+ * This function uses TCLAP library to parse command line arguments
+ * 
+ * @param  argc arguments count
+ * @param  argv arguments vector
+ * @return      parsed arguments
+ */
+struct Args getArgs(int argc, char *argv[]);
+
+/**
  * Initial Hardware Setup
  *
  * This function initialize the device to interface with hardware.
  * 
  * @return setup status
  */
-int initHardware(struct Container *container);
+int initHardware(struct Container *container, struct Args *args);
 
 /**
  * Setup MIDI Input/Output
  * 
  * @return  status
  */
-int midiIOSetup(MidiIO *io);
+int midiIOSetup(MidiIO *io, struct Args *args);
 
 /**
  * Setup nRf24L01+ Radio Transceiver
  * 
  * @return  status
  */
-int radioSetup(ORF24 *rf);
+int radioSetup(ORF24 *rf, struct Args *args);
 
 /**
  * Setup keypad matrix
  * 
  * @return  status
  */
-int keypadSetup(WiringPiKeypad *keypad);
+int keypadSetup(WiringPiKeypad *keypad, struct Args *args);
 
 #endif

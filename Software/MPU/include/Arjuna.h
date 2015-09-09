@@ -34,14 +34,11 @@
 #ifndef _ARJUNA_H_
 #define _ARJUNA_H_
 
-#include <tclap/CmdLine.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 #include "Setup.h"
-
-struct Args {
-	bool debugEnabled;
-	bool keyboardEnabled;
-};
 
 /**
  * Main Function
@@ -53,17 +50,6 @@ struct Args {
  * @return      status
  */
 int main(int argc, char *argv[]);
-
-/**
- * Get Command Line Arguments
- *
- * This function uses TCLAP library to parse command line arguments
- * 
- * @param  argc arguments count
- * @param  argv arguments vector
- * @return      parsed arguments
- */
-struct Args getArgs(int argc, char *argv[]);
 
 /**
  * Start Application Routine
@@ -87,7 +73,7 @@ void showMenu(void);
  * 
  * @param container hardware handler
  */
-void songSelector(struct Container *container);
+std::string songSelector(struct Container *container);
 
 /**
  * Print Song List
@@ -97,7 +83,7 @@ void songSelector(struct Container *container);
  * 
  * @param songList [description]
  */
-void printSongList(ifstream &songList);
+void printSongList(std::ifstream *songList);
 
 /**
  * Select Song
@@ -107,6 +93,6 @@ void printSongList(ifstream &songList);
  * @param  songList song list handler
  * @return          song name
  */
-std::string selectSong(struct Container *container, ifstream &songList);
+std::string selectSong(struct Container *container, std::ifstream *songList);
 
 #endif
