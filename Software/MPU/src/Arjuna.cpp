@@ -43,30 +43,6 @@
 struct Args args;
 
 /**
- * MIDI Input/Output Handler
- *
- * This global variable is used to handlee MIDI Input/Output activity,
- * including sending and receiving MIDI messages
- */
-MidiIO *io;
-
-/**
- * Radio Transceiver Handler
- *
- * This global variable is used to handle radio transceiver activity,
- * including sending and receiving packages
- */
-ORF24 *rf;
-
-/**
- * Keypad Matrix Handler
- *
- * This global variable is used to handle keyboard matrix activity,
- * mainly handle key press
- */
-WiringPiKeypad *keypad;
-
-/**
  * Main Function
  *
  * This is the starting point of the program.
@@ -79,12 +55,15 @@ int main(int argc, char *argv[])
 {
 	args = getArgs(argc, argv);
 
-	if (initHardware())
+	struct Container *container = new Container;
+
+	if (initHardware(container))
 	{
 		std::cout << "Program is exiting..." << std::endl;
 		return -1;
 	}
 
+	// Routine should have container
 	startRoutine();
 
 	return 0;
@@ -112,125 +91,6 @@ struct Args getArgs(int argc, char *argv[])
 	parsedArgs.keyboardEnabled = enableKeyboardSwitch.getValue();
 
 	return parsedArgs;
-}
-
-/**
- * Initial Hardware Setup
- *
- * This function initialize the device to interface with hardware.
- * 
- * @return setup status
- */
-int initHardware(void)
-{
-	if (args.debugEnabled)
-		std::cout << "Setting up WiringPi..." << std::endl;
-
-	if (wiringPiSetup())
-	{
-		std::cout << "Failed to set up WiringPi." << std::endl;
-		return -1;
-	}
-
-	if (midiIOSetup())
-	{
-		std::cout << "Failed to set up MIDI I/O." << std::endl;
-		return -1;
-	}
-
-	if (radioSetup())
-	{
-		std::cout << "Failed to set up radio transceiver." << std::endl;
-		return -1;
-	}
-
-	if (keypadSetup())
-	{
-		std::cout << "Failed to set up keypad." << std::endl;
-		return -1;
-	}
-
-	return 0;
-}
-
-/**
- * Setup MIDI Input/Output
- * 
- * @return  status
- */
-int midiIOSetup(void)
-{
-	if (args.debugEnabled)
-		std::cout << "Setting up MIDI I/O..." << std::endl;
-
-	io = new MidiIO;
-
-	io->enableDebug(args.debugEnabled);
-	
-	if (io->openMidiOutPort())
-	{
-		std::cout << "Error in opening MIDI output port." << std::endl;
-		return -1;
-	}
-
-	if (io->openMidiInPort())
-	{
-		std::cout << "Error in opening MIDI input port." << std::endl;
-		return -1;
-	}
-
-	return 0;
-}
-
-/**
- * Setup nRf24L01+ Radio Transceiver
- * 
- * @return  status
- */
-int radioSetup(void)
-{
-	if (args.debugEnabled)
-		std::cout << "Setting up radio transceiver..." << std::endl;
-
-	rf = new ORF24(21);
-
-	if (args.debugEnabled)
-		rf->enableDebug();
-
-	rf->begin();
-	rf->setPayloadSize(1);
-	rf->setChannel(76);
-	rf->setCRCLength(CRC_2_BYTE);
-	rf->setPowerLevel(RF_PA_HIGH);
-
-	return 0;
-}
-
-/**
- * Setup keypad matrix
- * 
- * @return  status
- */
-int keypadSetup(void)
-{
-	if (args.debugEnabled)
-		std::cout << "Setting up keypad matrix..." << std::endl;
-
-	int row[4] = {1, 2, 3, 4};
-	int column[4] = {21, 22, 23, 24};
-	std::vector<std::vector<char>> matrix {
-		{'1', '2', '3', 'A'},
-		{'4', '5', '6', 'B'},
-		{'7', '8', '9', 'C'},
-		{'*', '0', '#', 'D'}
-	};
-
-	keypad = new WiringPiKeypad(4, 4);
-	keypad->setRowPin(row);
-	keypad->setColumnPin(column);
-	keypad->setMatrix(matrix);
-
-	return 0;
 }
 
 /**

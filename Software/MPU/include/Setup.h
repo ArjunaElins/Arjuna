@@ -31,53 +31,50 @@
  * 
  */
 
-#ifndef _ARJUNA_H_
-#define _ARJUNA_H_
+#ifndef _SETUP_H_
+#define _SETUP_H_
 
-#include <tclap/CmdLine.h>
+#include <iostream>
+#include <wiringPi.h>
 
-#include "Setup.h"
+#include "MidiIO.h"
+#include "ORF24.h"
+#include "WiringPiKeypad"
 
-struct Args {
-	bool debugEnabled;
-	bool keyboardEnabled;
+struct Container {
+	MidiIO *io;
+	ORF24 *rf;
+	WiringPiKeypad *keypad;
 };
 
 /**
- * Main Function
+ * Initial Hardware Setup
  *
- * This is the starting point of the program.
+ * This function initialize the device to interface with hardware.
  * 
- * @param  argc arg count
- * @param  argv arg vector
- * @return      status
+ * @return setup status
  */
-int main(int argc, char *argv[]);
+int initHardware(struct Container *container);
 
 /**
- * Get Command Line Arguments
- *
- * This function uses TCLAP library to parse command line arguments
+ * Setup MIDI Input/Output
  * 
- * @param  argc arguments count
- * @param  argv arguments vector
- * @return      parsed arguments
+ * @return  status
  */
-struct Args getArgs(int argc, char *argv[]);
+int midiIOSetup(MidiIO *io);
 
 /**
- * Start Application Routine
- *
- * This routine start by showing main menu. It will handle user input
- * and call other methods depending on the input.
+ * Setup nRf24L01+ Radio Transceiver
+ * 
+ * @return  status
  */
-void startRoutine(void);
+int radioSetup(ORF24 *rf);
 
 /**
- * Show Application Menu
- *
- * In this screen, user can select the application operation.
+ * Setup keypad matrix
+ * 
+ * @return  status
  */
-void showMenu(void)
+int keypadSetup(WiringPiKeypad *keypad);
 
 #endif
