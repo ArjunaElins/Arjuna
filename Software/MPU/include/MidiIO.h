@@ -123,6 +123,21 @@ public:
 	 * @return  status
 	 */
 	int openMidiOutPort(void);
+
+	/**
+	 * Send MIDI Message to Output Port
+	 * 
+	 * @param message 	message container
+	 */
+	void sendMessage(std::vector<unsigned char> *message);
+
+	/**
+	 * Receive MIDI message from Input port
+	 * 
+	 * @param  message 	message container
+	 * @return         	stamp
+	 */
+	double getMessage(std::vector<unsigned char> *message);
 };
 
 #endif

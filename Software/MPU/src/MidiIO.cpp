@@ -154,3 +154,24 @@ int MidiIO::openMidiOutPort(void)
 
 	return 0;
 }
+
+/**
+ * Send MIDI Message to Output Port
+ * 
+ * @param message 	message container
+ */
+void MidiIO::sendMessage(std::vector<unsigned char> *message)
+{
+	out->sendMessage(message);
+}
+
+/**
+ * Receive MIDI message from Input port
+ * 
+ * @param  message 	message container
+ * @return         	stamp
+ */
+double MidiIO::getMessage(std::vector<unsigned char> *message)
+{
+	return in->getMessage(message);
+}
