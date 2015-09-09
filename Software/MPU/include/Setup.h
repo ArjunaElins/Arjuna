@@ -84,20 +84,20 @@ int initHardware(struct Container *container, struct Args *args);
  * 
  * @return  status
  */
-int midiIOSetup(MidiIO *io, struct Args *args);
+int midiIOSetup(struct Container *container, struct Args *args);
 
 /**
  * Setup nRf24L01+ Radio Transceiver
  * 
  * @return  status
  */
-int radioSetup(ORF24 *rf, struct Args *args);
+int radioSetup(struct Container *container, struct Args *args);
 
 /**
  * Setup keypad matrix
  * 
  * @return  status
  */
-int keypadSetup(WiringPiKeypad *keypad, struct Args *args);
+int keypadSetup(struct Container *container, struct Args *args);
 
 #endif

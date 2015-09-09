@@ -75,19 +75,19 @@ int initHardware(struct Container *container, struct Args *args)
 		return -1;
 	}
 
-	if (midiIOSetup(container->io, args))
+	if (midiIOSetup(container, args))
 	{
 		std::cout << "Failed to set up MIDI I/O." << std::endl;
 		return -1;
 	}
 
-	if (radioSetup(container->rf, args))
+	if (radioSetup(container, args))
 	{
 		std::cout << "Failed to set up radio transceiver." << std::endl;
 		return -1;
 	}
 
-	if (keypadSetup(container->keypad, args))
+	if (keypadSetup(container, args))
 	{
 		std::cout << "Failed to set up keypad." << std::endl;
 		return -1;
@@ -101,12 +101,13 @@ int initHardware(struct Container *container, struct Args *args)
  * 
  * @return  status
  */
-int midiIOSetup(MidiIO *io, struct Args *args)
+int midiIOSetup(struct Container *container, struct Args *args)
 {
 	if (args->debugEnabled)
 		std::cout << "Setting up MIDI I/O..." << std::endl;
 
-	io = new MidiIO;
+	container->io = new MidiIO;
+	MidiIO *io = container->io;
 
 	io->enableDebug(args->debugEnabled);
 	
@@ -130,12 +131,13 @@ int midiIOSetup(MidiIO *io, struct Args *args)
  * 
  * @return  status
  */
-int radioSetup(ORF24 *rf, struct Args *args)
+int radioSetup(struct Container *container, struct Args *args)
 {
 	if (args->debugEnabled)
 		std::cout << "Setting up radio transceiver..." << std::endl;
 
-	rf = new ORF24(21);
+	container->rf = new ORF24(21);
+	ORF24 *rf = container->rf;
 
 	if (args->debugEnabled)
 		rf->enableDebug();
@@ -154,7 +156,7 @@ int radioSetup(ORF24 *rf, struct Args *args)
  * 
  * @return  status
  */
-int keypadSetup(WiringPiKeypad *keypad, struct Args *args)
+int keypadSetup(struct Container *container, struct Args *args)
 {
 	if (args->debugEnabled)
 		std::cout << "Setting up keypad matrix..." << std::endl;
@@ -168,7 +170,9 @@ int keypadSetup(WiringPiKeypad *keypad, struct Args *args)
 		{'*', '0', '#', 'D'}
 	};
 
-	keypad = new WiringPiKeypad(4, 4);
+	container->keypad = new WiringPiKeypad(4, 4);
+	WiringPiKeypad *keypad = container->keypad;
+
 	keypad->setRowPin(row);
 	keypad->setColumnPin(column);
 	keypad->setMatrix(matrix);
