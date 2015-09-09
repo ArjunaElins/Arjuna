@@ -39,6 +39,7 @@
 #include <wiringPi.h>
 
 #include "MidiIO.h"
+#include "ORF24.h"
 
 struct Args {
 	bool debugEnabled;
@@ -82,5 +83,12 @@ int initHardware(void);
  * @return  status
  */
 int MidiIOSetup(void);
+
+/**
+ * Setup nRf24L01+ Radio Transceiver
+ * 
+ * @return  status
+ */
+int RadioSetup(void);
 
 #endif

@@ -45,10 +45,18 @@ struct Args args;
 /**
  * MIDI Input/Output Handler
  *
- * This global variable is used to handler MIDI Input/Output activity,
+ * This global variable is used to handlee MIDI Input/Output activity,
  * including sending and receiving MIDI messages
  */
 MidiIO *io;
+
+/**
+ * Radio Transceiver Handler
+ *
+ * This global variable is used to handle radio transceiver activity,
+ * including sending and receiving packages
+ */
+ORF24 *rf;
 
 /**
  * Main Function
@@ -103,7 +111,7 @@ struct Args getArgs(int argc, char *argv[])
  * 
  * @return setup status
  */
-int initHardware()
+int initHardware(void)
 {
 	if (args.debugEnabled)
 		std::cout << "Setting up WiringPi..." << std::endl;
@@ -118,6 +126,11 @@ int initHardware()
 	{
 		std::cout << "Failed to set up MIDI I/O." << std::endl;
 		return -1;
+	}
+
+	if (RadioSetup())
+	{
+		std::cout << "Failed to set up radio transceiver." << std::endl;
 	}
 
 	return 0;
@@ -148,6 +161,30 @@ int MidiIOSetup(void)
 		std::cout << "Error in opening MIDI input port." << std::endl;
 		return -1;
 	}
+
+	return 0;
+}
+
+/**
+ * Setup nRf24L01+ Radio Transceiver
+ * 
+ * @return  status
+ */
+int RadioSetup(void)
+{
+	if (args.debugEnabled)
+		std::cout << "Setting up radio transceiver..." << std::endl;
+
+	rf = new ORF24(21);
+
+	if (args.debugEnabled)
+		rf->enableDebug();
+
+	rf->begin();
+	rf->setPayloadSize(1);
+	rf->setChannel(76);
+	rf->setCRCLength(CRC_2_BYTE);
+	rf->setPowerLevel(RF_PA_HIGH);
 
 	return 0;
 }
