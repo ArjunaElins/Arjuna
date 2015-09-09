@@ -71,7 +71,7 @@ struct Args getArgs(int argc, char *argv[]);
  * This routine start by showing main menu. It will handle user input
  * and call other methods depending on the input.
  */
-void startRoutine(void);
+void startRoutine(struct Container *container);
 
 /**
  * Show Application Menu

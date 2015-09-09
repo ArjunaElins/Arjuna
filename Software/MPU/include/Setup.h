@@ -41,6 +41,9 @@
 #include "ORF24.h"
 #include "WiringPiKeypad"
 
+/**
+ * Container is a struct to contain hardware handler
+ */
 struct Container {
 	MidiIO *io;
 	ORF24 *rf;

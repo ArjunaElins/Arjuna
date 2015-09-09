@@ -55,16 +55,16 @@ int main(int argc, char *argv[])
 {
 	args = getArgs(argc, argv);
 
-	struct Container *container = new Container;
+	struct Container container;
 
-	if (initHardware(container))
+	if (initHardware(&container))
 	{
 		std::cout << "Program is exiting..." << std::endl;
 		return -1;
 	}
 
 	// Routine should have container
-	startRoutine();
+	startRoutine(&container);
 
 	return 0;
 }
@@ -99,10 +99,11 @@ struct Args getArgs(int argc, char *argv[])
  * This routine start by showing main menu. It will handle user input
  * and call other methods depending on the input.
  */
-void startRoutine(void)
+void startRoutine(struct Container *container)
 {
 	char keypress;
 	std::string songPath;
+	WiringPiKeypad *keypad = container->keypad;
 
 	while (1)
 	{
