@@ -33,69 +33,124 @@
 
 #include "MidiIO.h"
 
-	/**
-	* MidiIO Class Constructor
-	*
-	* This constructor set the default input and output port to 1
-	*/
-	MidiIO::MidiIO(): inPort(1), outPort(1)
+/**
+* MidiIO Class Constructor
+*
+* This constructor set the default input and output port to 1
+*/
+MidiIO::MidiIO(): inPort(1), outPort(1)
+{
+	initIO();
+}
+
+/**
+ * MidiIO Class Constructor
+ *
+ * This constructor receive input and output port as arguments and set
+ * those ports to the class properties.
+ *
+ * The in and out arguments are human friendly number (starts from 1)
+ * while MidiIO numbering starts from 0
+ *
+ * @param  int 	in 	input port
+ * @param  int 	out	output port
+ */
+MidiIO::MidiIO(int in, int out): inPort(in - 1), outPort(out - 1)
+{
+	initIO();
+}
+
+/**
+ * Initialize MIDI IO
+ *
+ * This method creates RtMidi input and output instance
+ */
+void MidiIO::initIO(void)
+{
+	if (debugIsHigh(debugLevel))
+		std::cout << "Creating MIDI In and MIDI Out instance..." << std::endl;
+
+	try
 	{
-		initIO();
+		in = new RtMidiIn();
+		out = new RtMidiOut();
+	}
+	catch (RtMidiError &error)
+	{
+		error.printMessage();
+		exit(EXIT_FAILURE);
 	}
 
-	/**
-	 * MidiIO Class Constructor
-	 *
-	 * This constructor receive input and output port as arguments and set
-	 * those ports to the class properties.
-	 *
-	 * The in and out arguments are human friendly number (starts from 1)
-	 * while MidiIO numbering starts from 0
-	 *
-	 * @param  int 	in 	input port
-	 * @param  int 	out	output port
-	 */
-	MidiIO::MidiIO(int in, int out): inPort(in - 1), outPort(out - 1)
+	if (debugIsHigh(debugLevel) && in)
+		std::cout << "MIDI In instance created." << std::endl;
+
+	if (debugIsHigh(debugLevel) && out)
+		std::cout << "MIDI In instance created." << std::endl;
+}
+
+/**
+ * Set Debug Level
+ *
+ * The higher the level, more information will be shown
+ *
+ * @param  DebugLevel  level  debug level
+ */
+void MidiIO::setDebugLevel(DebugLevel level)
+{
+	debugLevel = level;
+}
+
+/**
+ * Open MIDI Input Port
+ * 
+ * @return  status
+ */
+int MidiIO::openMidiInPort(void)
+{
+	if (debugIsLow(debugLevel))
+		std::cout << "\nOpening input port #" << inPort + 1 << ": "
+				  << in->getPortName(inPort) << "...\n";
+
+	if (inPort >= in->getPortCount())
 	{
-		initIO();
+		if (debugIsLow(debugLevel))
+			std::cout << "\nInput port #" << inPort + 1 << " is not available.\n";
+		
+		return -1;
 	}
 
-	/**
-	 * Initialize MIDI IO
-	 *
-	 * This method creates RtMidi input and output instance
-	 */
-	void MidiIO::initIO(void)
+	in->openPort(inPort, "Arjuna MIDI Input");
+
+	if (debugIsLow(debugLevel))
+		std::cout << "Input port #" << inPort + 1 << ": " << in->getPortName(inPort)
+				  << " is open.\n";
+
+	return 0;
+}
+
+/**
+ * Open MIDI output port
+ * 
+ * @return  	status
+ */
+int MidiIO::openMidiOutPort(void)
+{
+	if (debugIsLow(debugLevel))
+		std::cout << "\nOpening output port #" << outPort + 1 << ": "
+				  << out->getPortName(outPort) << "...\n";
+
+	if (outPort >= out->getPortCount())
 	{
-		if (isDebugHigh())
-			std::cout << "Creating MIDI In and MIDI Out instance..." << std::cout;
-
-		try
-		{
-			in = new RtMidiIn();
-			out = new RtMidiOut();
-		}
-		catch (RtMidiError &error)
-		{
-			error.printMessage();
-			exit(EXIT_FAILURE);
-		}
-
-		if (isDebugHigh() && in)
-			std::cout << "MIDI In instance created." << std::endl;
-
-		if (isDebugHigh() && out)
-			std::cout << "MIDI In instance created." << std::endl;
+		if (debugIsLow(debugLevel))
+			std::cout << "\nOutput port #" << outPort + 1 << " is not available.\n";
+		return -1;
 	}
 
-	/**
-	 * Set Debug Level
-	 *
-	 * The higher the level, more information will be shown
-	 *
-	 * @param  DebugLevel  level  debug level
-	 */
-	void MidiIO::setDebugLevel(DebugLevel level)
-	{
-		debugLevel = level;
-	}
+	out->openPort(outPort, "Arjuna MIDI Output");
+
+	if (debugIsLow(debugLevel))
+		std::cout << "Output port #" << outPort + 1 << ": " << out->getPortName(outPort)
+				  << " is open.\n";
+
+	return 0;
+}

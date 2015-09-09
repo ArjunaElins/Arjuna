@@ -45,12 +45,16 @@ enum DebugLevel {NONE, LOW, HIGH};
  * @param  level  debug level
  * @return        boolean
  */
-bool isDebugNone(DebugLevel level)
+bool debugIsNone(DebugLevel level)
 {
-	if (DebugLevel == NONE)
-		return true
+	bool status;
+
+	if (level == NONE)
+		status = true;
 	else
-		return false;	
+		status = false;
+
+	return status;
 }
 
 /**
@@ -59,12 +63,16 @@ bool isDebugNone(DebugLevel level)
  * @param  level  debug level
  * @return        boolean
  */
-bool isDebugLow(DebugLevel level)
+bool debugIsLow(DebugLevel level)
 {
-	if (DebugLevel >= LOW)
-		return true
+	bool status;
+
+	if (level >= LOW)
+		status = true;
 	else
-		return false;	
+		status = false;
+
+	return status;
 }
 
 /**
@@ -73,12 +81,16 @@ bool isDebugLow(DebugLevel level)
  * @param  level  debug level
  * @return        boolean
  */
-bool isDebugHigh(DebugLevel level)
+bool debugIsHigh(DebugLevel level)
 {
-	if (DebugLevel == HIGH)
-		return true
+	bool status;
+
+	if (level == HIGH)
+		status = true;
 	else
-		return false;	
+		status = false;
+
+	return status;
 }
 
 #endif

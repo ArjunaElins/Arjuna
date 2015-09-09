@@ -35,7 +35,7 @@
 #define _MIDI_IO_H_
 
 #include <iostream>
- 
+
 #include "Debug.h"
 #include "RtMidi.h"
 
@@ -109,6 +109,20 @@ public:
 	 * @param  DebugLevel  level  debug level
 	 */
 	void setDebugLevel(DebugLevel level);
+
+	/**
+	 * Open MIDI Input Port
+	 * 
+	 * @return  status
+	 */
+	int openMidiInPort(void);
+
+	/**
+	 * Open MIDI Output Port
+	 * 
+	 * @return  status
+	 */
+	int openMidiOutPort(void);
 };
 
 #endif
