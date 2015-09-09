@@ -77,7 +77,7 @@ void startRoutine(struct Container *container)
 		showMenu();
 		keypress = keypad->getKey();
 
-		if (keypress == 'A')
+		if (keypress == '*')
 			songPath.assign(songSelector(container));
 	}
 }
@@ -107,7 +107,7 @@ std::string songSelector(struct Container *container)
 {
 	const std::string basedir = "/home/arjuna/Songs/";
 
-	std::ifstream songList(basedir + ".songList");
+	std::ifstream songList(basedir + ".songlist");
 
 	if (songList.is_open())
 	{
@@ -154,7 +154,7 @@ void printSongList(std::ifstream *songList)
  */
 std::string selectSong(struct Container *container, std::ifstream *songList)
 {
-	std::cout << "Press number to select song. Press 'A' to select." << std::endl;
+	std::cout << "Press number to select song. Press '*' to select." << std::endl;
 
 	char keypress;
 	std::string songNumber;
@@ -164,7 +164,7 @@ std::string selectSong(struct Container *container, std::ifstream *songList)
 	{
 		keypress = keypad->getKey();
 		songNumber += keypress;
-	} while (keypress != 'A');
+	} while (keypress != '*');
 
 	songNumber.pop_back(); // Remove 'A' from songNumber
 	int number = std::stoi(songNumber);
