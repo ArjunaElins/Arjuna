@@ -195,13 +195,12 @@ void songPlayer(struct Container *container, std::string songPath)
 	std::cout << "Playing song \"" << songPath << "\"...\n";
 	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
 
-	MidiFile midi(songPath + ".mid");
-	midi.deltaTicks();
-	midi.joinTracks();
+	MidiFile midi = prepareMidi(songPath);
 
 	int tpq = midi.getTicksPerQuarterNote();
 	double spt = 0.5 / tpq;
 
+	delay(500);
 	for (int t = 0; t < midi.getTrackCount(); t++)
 	{
 		for (int e = 0; e < midi[t].size(); e++)
@@ -214,6 +213,21 @@ void songPlayer(struct Container *container, std::string songPath)
 			sendMidiMessage(container->io, midi[t][e]);
 		}
 	}
+}
+
+/**
+ * Prepare MIDI data before use
+ * 
+ * @param  songPath MIDI song location
+ * @return          MIDI container
+ */
+MidiFile prepareMidi(std::string songPath)
+{
+	MidiFile midi(songPath + ".mid");
+	midi.deltaTicks();
+	midi.joinTracks();
+
+	return midi;
 }
 
 /**

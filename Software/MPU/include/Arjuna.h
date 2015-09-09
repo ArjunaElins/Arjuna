@@ -108,6 +108,14 @@ std::string selectSong(struct Container *container, std::ifstream *songList);
 void songPlayer(struct Container *container, std::string songPath);
 
 /**
+ * Prepare MIDI data before use
+ * 
+ * @param  songPath MIDI song location
+ * @return          MIDI container
+ */
+MidiFile prepareMidi(std::string songPath);
+
+/**
  * Get Tempo in Second Per Tick
  * 	
  * @param e   	MidiEvent
