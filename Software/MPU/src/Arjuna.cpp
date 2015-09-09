@@ -43,6 +43,14 @@
 struct Args args;
 
 /**
+ * MIDI Input/Output Handler
+ *
+ * This global variable is used to handler MIDI Input/Output activity,
+ * including sending and receiving MIDI messages
+ */
+MidiIO *io;
+
+/**
  * Main Function
  *
  * This is the starting point of the program.
@@ -100,6 +108,38 @@ int initHardware()
 
 	if (wiringPiSetup())
 		return 1;
+
+	if (MidiIOSetup())
+		return 1;
+
+	return 0;
+}
+
+/**
+ * Setup MIDI Input/Output
+ * 
+ * @return  status
+ */
+int MidiIOSetup(void)
+{
+	if (args.debugEnabled)
+		std::cout << "Setting up MIDI I/O..." << std::endl;
+
+	io = new MidiIO;
+
+	io->enableDebug(args.debugEnabled);
+	
+	if (io->openMidiOutPort())
+	{
+		std::cout << "Error in opening MIDI output port." << std::endl;
+		return -1;
+	}
+
+	if (io->openMidiInPort())
+	{
+		std::cout << "Error in opening MIDI input port." << std::endl;
+		return -1;
+	}
 
 	return 0;
 }

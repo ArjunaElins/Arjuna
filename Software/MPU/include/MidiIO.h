@@ -36,7 +36,6 @@
 
 #include <iostream>
 
-#include "Debug.h"
 #include "RtMidi.h"
 
 /**
@@ -107,8 +106,10 @@ public:
 	 * Enable Debug
 	 *
 	 * This option will show debug informatio if set to true
+	 * 
+	 * @param 	bool 	enable
 	 */
-	void enableDebug(void);
+	void enableDebug(bool enable);
 
 	/**
 	 * Open MIDI Input Port

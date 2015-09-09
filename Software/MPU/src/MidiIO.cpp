@@ -92,10 +92,12 @@ void MidiIO::initIO(void)
  * Enable Debug
  *
  * This option will show debug informatio if set to true
+ *
+ * @param 	bool 	enable
  */
-void MidiIO::enableDebug(void)
+void MidiIO::enableDebug(bool enable)
 {
-	debug = true;
+	debug = enable;
 }
 
 /**
@@ -105,19 +107,23 @@ void MidiIO::enableDebug(void)
  */
 int MidiIO::openMidiInPort(void)
 {
-	std::cout << "\nOpening input port #" << inPort + 1 << ": "
-			  << in->getPortName(inPort) << "...\n";
+	if (debug)
+		std::cout << "\n  Opening input port #" << inPort + 1 << ": "
+				  << in->getPortName(inPort) << "...\n";
 
 	if (inPort >= in->getPortCount())
 	{
-		std::cout << "\nInput port #" << inPort + 1 << " is not available.\n";
+		if (debug)
+			std::cout << "\n  Input port #" << inPort + 1 << " is not available.\n";
+		
 		return -1;
 	}
 
 	in->openPort(inPort, "Arjuna MIDI Input");
 
-	std::cout << "Input port #" << inPort + 1 << ": " << in->getPortName(inPort)
-			  << " is open.\n";
+	if (debug)
+		std::cout << "  Input port #" << inPort + 1 << ": " << in->getPortName(inPort)
+				  << " is open.\n";
 
 	return 0;
 }
@@ -129,19 +135,23 @@ int MidiIO::openMidiInPort(void)
  */
 int MidiIO::openMidiOutPort(void)
 {
-	std::cout << "\nOpening output port #" << outPort + 1 << ": "
-			  << out->getPortName(outPort) << "...\n";
+	if (debug)
+		std::cout << "\n  Opening output port #" << outPort + 1 << ": "
+				  << out->getPortName(outPort) << "...\n";
 
 	if (outPort >= out->getPortCount())
 	{
-		std::cout << "\nOutput port #" << outPort + 1 << " is not available.\n";
+		if (debug)
+			std::cout << "\n  Output port #" << outPort + 1 << " is not available.\n";
+		
 		return -1;
 	}
 
 	out->openPort(outPort, "Arjuna MIDI Output");
 
-	std::cout << "Output port #" << outPort + 1 << ": " << out->getPortName(outPort)
-			  << " is open.\n";
+	if (debug)
+		std::cout << "  Output port #" << outPort + 1 << ": " << out->getPortName(outPort)
+				  << " is open.\n";
 
 	return 0;
 }

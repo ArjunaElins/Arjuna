@@ -38,6 +38,8 @@
 #include <tclap/CmdLine.h>
 #include <wiringPi.h>
 
+#include "MidiIO.h"
+
 struct Args {
 	bool debugEnabled;
 	bool keyboardEnabled;
@@ -72,6 +74,13 @@ struct Args getArgs(int argc, char *argv[]);
  * 
  * @return setup status
  */
-int initHardware();
+int initHardware(void);
+
+/**
+ * Setup MIDI Input/Output
+ * 
+ * @return  status
+ */
+int MidiIOSetup(void);
 
 #endif
