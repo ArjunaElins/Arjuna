@@ -40,6 +40,7 @@
 
 #include "MidiIO.h"
 #include "ORF24.h"
+#include "WiringPiKeypad"
 
 struct Args {
 	bool debugEnabled;
@@ -90,5 +91,12 @@ int MidiIOSetup(void);
  * @return  status
  */
 int RadioSetup(void);
+
+/**
+ * Setup keypad matrix
+ * 
+ * @return  status
+ */
+int keypadSetup(void);
 
 #endif

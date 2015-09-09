@@ -59,6 +59,14 @@ MidiIO *io;
 ORF24 *rf;
 
 /**
+ * Keypad Matrix Handler
+ *
+ * This global variable is used to handle keyboard matrix activity,
+ * mainly handle key press
+ */
+WiringPiKeypad *keypad;
+
+/**
  * Main Function
  *
  * This is the starting point of the program.
@@ -131,6 +139,13 @@ int initHardware(void)
 	if (RadioSetup())
 	{
 		std::cout << "Failed to set up radio transceiver." << std::endl;
+		return -1;
+	}
+
+	if (KeypadSetup())
+	{
+		std::cout << "Failed to set up keypad." << std::endl;
+		return -1;
 	}
 
 	return 0;
@@ -185,6 +200,33 @@ int RadioSetup(void)
 	rf->setChannel(76);
 	rf->setCRCLength(CRC_2_BYTE);
 	rf->setPowerLevel(RF_PA_HIGH);
+
+	return 0;
+}
+
+/**
+ * Setup keypad matrix
+ * 
+ * @return  status
+ */
+int keypadSetup(void)
+{
+	if (args.debugEnabled)
+		std::cout << "Setting up keypad matrix..." << std::endl;
+
+	int row[4] = {1, 2, 3, 4};
+	int column[4] = {21, 22, 23, 24};
+	std::vector<std::vector<char>> matrix {
+		{'1', '2', '3', 'A'},
+		{'4', '5', '6', 'B'},
+		{'7', '8', '9', 'C'},
+		{'*', '0', '#', 'D'}
+	};
+
+	keypad = new WiringPiKeypad(4, 4);
+	keypad->setRowPin(row);
+	keypad->setColumnPin(column);
+	keypad->setMatrix(matrix);
 
 	return 0;
 }
