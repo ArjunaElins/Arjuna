@@ -110,7 +110,8 @@ void startRoutine(struct Container *container)
 		showMenu();
 		keypress = keypad->getKey();
 
-		// Operation selector here
+		if (keypress == 'A')
+			songPath = songSelector(container);
 	}
 }
 
@@ -126,4 +127,87 @@ void showMenu(void)
 			  << " B - Play Song \n"
 			  << " C - Start Evaluating\n"
 			  << " D - Exit\n";
+}
+
+/**
+ * Song Selector
+ *
+ * This method will start the song selector.
+ * 
+ * @param container hardware handler
+ */
+int songSelector(struct Container *container)
+{
+	const std::string basedir = "/home/arjuna/Songs/";
+
+	ifstream songList(basedir + ".songList");
+
+	if (songList.is_open())
+	{
+		printSongList(songList);
+		std::string song = selectSong(songList);
+
+		return basedir + song + "/" + song;
+	}
+	else
+	{
+		std::cout << "Error opening file." << std::endl;
+		return 0;
+	}
+}
+
+/**
+ * Print Song List
+ *
+ * This method will parse every line of the file handler and print it
+ * to stdout
+ * 
+ * @param songList [description]
+ */
+void printSongList(ifstream &songList)
+{
+	std::cout << "Song list:" << std::endl;
+
+	int i = 1;
+	std::string song;
+
+	while (getline(*songList, song))
+	{
+		std::cout << i++ << ". " << song << std::endl;
+	}
+}
+
+/**
+ * Select Song
+ *
+ * This method will ask the user to choose from opened song list
+ * 
+ * @param  songList song list handler
+ * @return          song name
+ */
+std::string selectSong(struct Container *container, ifstream &songList)
+{
+	std::cout << "Press number to select song. Press 'A' to select." << std::endl;
+
+	char keypress;
+	std::string songNumber;
+	WiringPiKeypad *keypad = container->keypad;
+
+	do
+	{
+		keypress = keypad->getKey();
+		songNumber += keypress;
+	} while (keypress != 'A');
+
+	songNumber.pop_back(); // Remove 'A' from songNumber
+	int number = std::stoi(sungNumber);
+	songList.clear();
+	songList.seekg(0, std::ios::beg);
+
+	std::string song;
+	for (int i = 0; i < number; i++)
+		getline(songList, song);
+	std::cout << "Selected: " << song << std::endl;
+
+	return song;
 }

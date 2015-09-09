@@ -78,6 +78,35 @@ void startRoutine(struct Container *container);
  *
  * In this screen, user can select the application operation.
  */
-void showMenu(void)
+void showMenu(void);
+
+/**
+ * Song Selector
+ *
+ * This method will start the song selector.
+ * 
+ * @param container hardware handler
+ */
+void songSelector(struct Container *container);
+
+/**
+ * Print Song List
+ *
+ * This method will parse every line of the file handler and print it
+ * to stdout
+ * 
+ * @param songList [description]
+ */
+void printSongList(ifstream &songList);
+
+/**
+ * Select Song
+ *
+ * This method will ask the user to choose from opened song list
+ * 
+ * @param  songList song list handler
+ * @return          song name
+ */
+std::string selectSong(struct Container *container, ifstream &songList);
 
 #endif
