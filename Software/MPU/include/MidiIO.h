@@ -65,7 +65,7 @@ private:
 	 *
 	 * The higher the level, more information will be shown
 	 */
-	DebugLevel debugLevel;
+	bool debug;
 
 	/**
 	 * RtMidi Input instance
@@ -104,11 +104,11 @@ public:
 	MidiIO(int in, int out);
 
 	/**
-	 * Set Debug Level
+	 * Enable Debug
 	 *
-	 * @param  DebugLevel  level  debug level
+	 * This option will show debug informatio if set to true
 	 */
-	void setDebugLevel(DebugLevel level);
+	void enableDebug(void);
 
 	/**
 	 * Open MIDI Input Port

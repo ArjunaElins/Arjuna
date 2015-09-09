@@ -67,7 +67,7 @@ MidiIO::MidiIO(int in, int out): inPort(in - 1), outPort(out - 1)
  */
 void MidiIO::initIO(void)
 {
-	if (debugIsHigh(debugLevel))
+	if (debug)
 		std::cout << "Creating MIDI In and MIDI Out instance..." << std::endl;
 
 	try
@@ -81,23 +81,21 @@ void MidiIO::initIO(void)
 		exit(EXIT_FAILURE);
 	}
 
-	if (debugIsHigh(debugLevel) && in)
+	if (debug && in)
 		std::cout << "MIDI In instance created." << std::endl;
 
-	if (debugIsHigh(debugLevel) && out)
+	if (debug && out)
 		std::cout << "MIDI In instance created." << std::endl;
 }
 
 /**
- * Set Debug Level
+ * Enable Debug
  *
- * The higher the level, more information will be shown
- *
- * @param  DebugLevel  level  debug level
+ * This option will show debug informatio if set to true
  */
-void MidiIO::setDebugLevel(DebugLevel level)
+void MidiIO::enableDebug(void)
 {
-	debugLevel = level;
+	debug = true;
 }
 
 /**
@@ -107,23 +105,19 @@ void MidiIO::setDebugLevel(DebugLevel level)
  */
 int MidiIO::openMidiInPort(void)
 {
-	if (debugIsLow(debugLevel))
-		std::cout << "\nOpening input port #" << inPort + 1 << ": "
-				  << in->getPortName(inPort) << "...\n";
+	std::cout << "\nOpening input port #" << inPort + 1 << ": "
+			  << in->getPortName(inPort) << "...\n";
 
 	if (inPort >= in->getPortCount())
 	{
-		if (debugIsLow(debugLevel))
-			std::cout << "\nInput port #" << inPort + 1 << " is not available.\n";
-		
+		std::cout << "\nInput port #" << inPort + 1 << " is not available.\n";
 		return -1;
 	}
 
 	in->openPort(inPort, "Arjuna MIDI Input");
 
-	if (debugIsLow(debugLevel))
-		std::cout << "Input port #" << inPort + 1 << ": " << in->getPortName(inPort)
-				  << " is open.\n";
+	std::cout << "Input port #" << inPort + 1 << ": " << in->getPortName(inPort)
+			  << " is open.\n";
 
 	return 0;
 }
@@ -135,22 +129,19 @@ int MidiIO::openMidiInPort(void)
  */
 int MidiIO::openMidiOutPort(void)
 {
-	if (debugIsLow(debugLevel))
-		std::cout << "\nOpening output port #" << outPort + 1 << ": "
-				  << out->getPortName(outPort) << "...\n";
+	std::cout << "\nOpening output port #" << outPort + 1 << ": "
+			  << out->getPortName(outPort) << "...\n";
 
 	if (outPort >= out->getPortCount())
 	{
-		if (debugIsLow(debugLevel))
-			std::cout << "\nOutput port #" << outPort + 1 << " is not available.\n";
+		std::cout << "\nOutput port #" << outPort + 1 << " is not available.\n";
 		return -1;
 	}
 
 	out->openPort(outPort, "Arjuna MIDI Output");
 
-	if (debugIsLow(debugLevel))
-		std::cout << "Output port #" << outPort + 1 << ": " << out->getPortName(outPort)
-				  << " is open.\n";
+	std::cout << "Output port #" << outPort + 1 << ": " << out->getPortName(outPort)
+			  << " is open.\n";
 
 	return 0;
 }
