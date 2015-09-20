@@ -205,7 +205,8 @@ void songPlayer(struct Container *container, std::string songPath)
 	FingerData finger(songPath + ".fgr");
 	std::vector<int> iFinger(midi.getTrackCount(), 0);
 
-	midi.joinTracks();
+	setPlayMode(&midi, BOTH_HANDS);
+
 	delay(500);
 	for (int t = 0; t < midi.getTrackCount(); t++)
 	{
@@ -221,6 +222,24 @@ void songPlayer(struct Container *container, std::string songPath)
 			sendFeedback(container->rf, finger, &iFinger, midi.getSplitTrack(t, e));
 		}
 	}
+}
+
+/**
+ * Set Play Mode
+ *
+ * This function prepares the MIDI file to play in right, left, or both hand modes
+ * 
+ * @param midi MIDI object
+ * @param mode Chosen mode
+ */
+void setPlayMode(MidiFile *midi, PlayMode mode)
+{
+	if (mode == LEFT_HAND)
+		midi->deleteTrack(0);
+	else if (mode == RIGHT_HAND)
+		midi->deleteTrack(1);
+	else
+		midi->joinTracks();
 }
 
 /**
