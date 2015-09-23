@@ -42,6 +42,15 @@
 #include "MidiFile.h"
 #include "FingerData.h"
 
+#define 	SELECT_SONG_BUTTON	'A'
+#define		PLAY_SONG_BUTTON	'B'
+#define		EVALUATOR_BUTTON	'C'
+#define 	STOP_BUTTON			'D'
+
+#define		BOTH_HANDS_MODE_BUTTON	'A'
+#define		RIGHT_HAND_MODE_BUTTON	'B'
+#define 	LEFT_HAND_MODE_BUTTON 	'C'
+
 enum PlayMode {BOTH_HANDS, LEFT_HAND, RIGHT_HAND};
 
 /**

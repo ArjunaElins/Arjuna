@@ -77,10 +77,12 @@ void startRoutine(Container *container)
 		showMenu();
 		keypress = keypad->getKey();
 
-		if (keypress == '*')
+		if (keypress == SELECT_SONG_BUTTON)
 			songPath.assign(songSelector(container));
-		else if (keypress == '0')
+		else if (keypress == PLAY_SONG_BUTTON)
 			songPlayer(container, songPath);
+		else if (keypress == STOP_BUTTON)
+			return;
 	}
 }
 
@@ -166,7 +168,7 @@ std::string selectSong(Container *container, std::ifstream *songList)
 	{
 		keypress = keypad->getKey();
 		songNumber += keypress;
-	} while (keypress != '*');
+	} while (keypress != SELECT_SONG_BUTTON);
 
 	songNumber.pop_back(); // Remove 'A' from songNumber
 	int number = std::stoi(songNumber);
@@ -244,11 +246,11 @@ PlayMode getPlayMode(Container *container)
 
 	keypress = container->keypad->getKey();
 
-	if (keypress == 'A')
+	if (keypress == BOTH_HAND_MODE_BUTTON)
 		mode = BOTH_HANDS;
-	else if (keypress == 'B')
+	else if (keypress == RIGHT_HAND_MODE_BUTTON)
 		mode = RIGHT_HAND;
-	else if (keypress == 'C')
+	else if (keypress == LEFT_HAND_MODE_BUTTON)
 		mode = LEFT_HAND;
 
 	return mode;
