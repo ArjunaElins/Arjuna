@@ -84,14 +84,11 @@ void FingerData::parse(char *buffer)
 		track.setTrackLength(p);
 		p += 4;
 
-		for (int i = 0; i < track.getTrackLength(); i += 2)
+		for (int i = 0; i < track.getTrackLength(); i++)
 		{
 			FingerEvent event;
 			
 			event.push(*(p++));
-			event.push(*(p++));
-
-			track.incEventLength();
 			track.push(event);
 		}
 
@@ -112,7 +109,7 @@ void FingerData::printAllEvents(void)
 		std::cout << "Event length: " << tracks[t].getEventLength() << std::endl;
 		for (int e = 0; e < tracks[t].getEventLength(); e++)
 		{
-			printf("%d\t%X\t%X\n", e, tracks[t][e].getCommand(), tracks[t][e].getData());
+			printf("%d\t%X\n", e,  tracks[t][e].getData());
 		}
 	}
 }
@@ -140,11 +137,6 @@ void FingerTrack::push(FingerEvent event)
 	events.push_back(event);
 }
 
-void FingerTrack::incEventLength(void)
-{
-	eventLength++;
-}
-
 int FingerTrack::getEventLength(void)
 {
 	return eventLength;
@@ -160,30 +152,9 @@ void FingerEvent::push(char d)
 	data.push_back(d);
 }
 
-char FingerEvent::getCommand(void)
-{
-	return data[0];
-}
-
 char FingerEvent::getData(void)
 {
 	return data[1];
-}
-
-bool FingerEvent::isNoteOn(void)
-{
-	if (data[0] == 0x90)
-		return true;
-	else
-		return false;
-}
-
-bool FingerEvent::isNoteOff(void)
-{
-	if (data[0] == 0x80)
-		return true;
-	else
-		return false;
 }
 
 bool FingerEvent::isCheckpoint(void)

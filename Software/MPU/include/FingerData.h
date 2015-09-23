@@ -47,11 +47,8 @@ private:
 	std::vector<char> data;
 public:
 	void push(char d);
-	char getCommand(void);
 	char getData(void);
 	char operator[](int i);
-	bool isNoteOn(void);
-	bool isNoteOff(void);
 	bool isCheckpoint(void);
 };
 
@@ -65,7 +62,6 @@ public:
 	void setTrackLength(char *p);
 	int getTrackLength(void);
 	void push(FingerEvent event);
-	void incEventLength(void);
 	int getEventLength(void);
 	FingerEvent operator[](int i);
 };
