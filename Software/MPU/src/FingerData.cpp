@@ -84,8 +84,6 @@ void FingerData::parse(char *buffer)
 		track.setTrackLength(p);
 		p += 4;
 
-		std::cout << "Track length: " << track.getTrackLength() << std::endl;
-
 		for (int i = 0; i < track.getTrackLength(); i++)
 		{
 			FingerEvent event;
