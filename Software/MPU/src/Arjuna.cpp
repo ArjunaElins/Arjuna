@@ -192,9 +192,6 @@ std::string selectSong(struct Container *container, std::ifstream *songList)
  */
 void songPlayer(struct Container *container, std::string songPath)
 {
-	std::cout << "Playing song \"" << songPath << "\"...\n";
-	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
-
 	// MIDI data preparation
 	MidiFile midi(songPath + ".mid");
 	midi.deltaTicks();
@@ -205,7 +202,11 @@ void songPlayer(struct Container *container, std::string songPath)
 	FingerData finger(songPath + ".fgr");
 	std::vector<int> iFinger(midi.getTrackCount(), 0);
 
-	midi.joinTracks();
+	setPlayMode(&midi, getPlayMode(container));
+
+	std::cout << "Playing song \"" << songPath << "\"...\n";
+	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
+
 	delay(500);
 	for (int t = 0; t < midi.getTrackCount(); t++)
 	{
@@ -221,6 +222,54 @@ void songPlayer(struct Container *container, std::string songPath)
 			sendFeedback(container->rf, finger, &iFinger, midi.getSplitTrack(t, e));
 		}
 	}
+}
+
+/**
+ * Get Play Mode
+ *
+ * This function ask the user to select the play mode
+ * 
+ * @param  container hardware handler
+ * @return           play mode
+ */
+PlayMode getPlayMode(Container *container)
+{
+	std::cout << "Select Play Mode." << std::endl
+			  << " A - Both hands" << std::endl
+			  << " B - Right hands" << std::endl
+			  << " C - Left hands" << std::endl;
+
+	char keypress;
+	PlayMode mode = BOTH_HANDS;
+
+	keypress = container->keypad->getKey();
+
+	if (keypress == 'A')
+		mode = BOTH_HANDS;
+	else if (keypress == 'B')
+		mode = RIGHT_HAND;
+	else if (keypress == 'C')
+		mode = LEFT_HAND;
+
+	return mode;
+}
+
+/**
+ * Set Play Mode
+ *
+ * This function prepares the MIDI file to play in right, left, or both hand modes
+ * 
+ * @param midi MIDI object
+ * @param mode Chosen mode
+ */
+void setPlayMode(MidiFile *midi, PlayMode mode)
+{
+	if (mode == LEFT_HAND)
+		midi->deleteTrack(0);
+	else if (mode == RIGHT_HAND)
+		midi->deleteTrack(1);
+	else
+		midi->joinTracks();
 }
 
 /**

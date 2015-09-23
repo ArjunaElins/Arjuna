@@ -42,6 +42,8 @@
 #include "MidiFile.h"
 #include "FingerData.h"
 
+enum PlayMode {BOTH_HANDS, LEFT_HAND, RIGHT_HAND};
+
 /**
  * Main Function
  *
@@ -107,6 +109,26 @@ std::string selectSong(struct Container *container, std::ifstream *songList);
  * @param  songPath  MIDI song location
  */
 void songPlayer(struct Container *container, std::string songPath);
+
+/**
+ * Get Play Mode
+ *
+ * This function ask the user to select the play mode
+ * 
+ * @param  container hardware handler
+ * @return           play mode
+ */
+PlayMode getPlayMode(Container *container);
+
+/**
+ * Set Play Mode
+ *
+ * This function prepares the MIDI file to play in right, left, or both hand modes
+ * 
+ * @param midi MIDI object
+ * @param mode Chosen mode
+ */
+void setPlayMode(MidiFile *midi, PlayMode mode);
 
 /**
  * Get Tempo in Second Per Tick
