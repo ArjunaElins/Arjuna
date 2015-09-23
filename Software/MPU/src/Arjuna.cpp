@@ -210,6 +210,26 @@ void startMPA(Container *container, std::string songPath, MPUOperation mode)
 	}
 }
 
+void evaluator(Container *container, MidiFile midi, FingerData finger)
+{
+	char keypress;
+	bool terminator = true;
+	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
+
+	std::vector<int> iFinger(midi.getTrackCount(), 0);
+
+	while (keypress != STOP_BUTTON)
+	{
+		std::vector<Key> keys;
+
+		// m = getUnisonNote(&midi, m, keys);
+		// f = getUnisonFinger(&finger, f, keys);
+		// receiveInput();
+		// evaluate();
+		// normalize();
+	}
+}
+
 /**
  * Song Player
  *

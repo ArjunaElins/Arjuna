@@ -52,6 +52,13 @@
 #define		RIGHT_HAND_MODE_BUTTON	'0'
 #define 	LEFT_HAND_MODE_BUTTON 	'#'
 
+struct Key
+{
+	int track;
+	unsigned char note;
+	unsigned char finger;
+};
+
 enum PlayMode {BOTH_HANDS, LEFT_HAND, RIGHT_HAND};
 enum MPUOperation {PLAYER, EVALUATOR};
 
