@@ -78,13 +78,21 @@ void startRoutine(Container *container)
 		keypress = keypad->getKey();
 
 		if (keypress == SELECT_SONG_BUTTON)
+		{
 			songPath.assign(songSelector(container));
+		}
 		else if (keypress == PLAY_SONG_BUTTON)
-			startMPA(container, songPath, PLAYER);
+		{
+
+		}
 		else if (keypress == EVALUATOR_BUTTON)
-			startMPA(container, songPath, EVALUATOR);
+		{
+			
+		}
 		else if (keypress == STOP_BUTTON)
+		{
 			return;
+		}
 	}
 }
 
@@ -186,99 +194,6 @@ std::string selectSong(Container *container, std::ifstream *songList)
 }
 
 /**
- * Start MIDI Processing Algorithm
- *
- * This function is a bootstrap for the MIDI Processing Algorithm.
- * It will call the player or the evaluator, depending on user selection
- * 
- * @param container hadrware handler
- * @param songPath  selected song path
- * @param mode      MPA operation mode
- */
-void startMPA(Container *container, std::string songPath, MPUOperation mode)
-{
-	// MIDI and finger data preparation
-	MidiFile midi(songPath + ".mid");
-	midi.deltaTicks();
-	setPlayMode(&midi, getPlayMode(container));
-	FingerData finger(songPath + ".fgr");
-
-	if (mode == PLAYER)
-	{
-		std::cout << "Playing song \"" << songPath << "\"...\n";
-		songPlayer(container, midi, finger);
-	}
-}
-
-void evaluator(Container *container, MidiFile midi, FingerData finger)
-{
-	char keypress;
-	bool terminator = true;
-	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
-
-	std::vector<int> iFinger(midi.getTrackCount(), 0);
-
-	while (keypress != STOP_BUTTON)
-	{
-		std::vector<Key> keys;
-
-		// m = getUnisonNote(&midi, m, keys);
-		// f = getUnisonFinger(&finger, f, keys);
-		// receiveInput();
-		// evaluate();
-		// normalize();
-	}
-}
-
-/**
- * Song Player
- *
- * This method is used to play MIDI song. It will open the MIDI file,
- * calculate some numbers, and send MIDI message to output port
- * 
- * @param  container hardware handler
- * @param  midi 	 MIDI file handler
- * @param  finger 	 finger data handler
- */
-void songPlayer(Container *container, MidiFile midi, FingerData finger)
-{
-	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
-
-	char keypress;
-	bool terminator = true;
-	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
-
-	int tpq = midi.getTicksPerQuarterNote();
-	double spt = 0.5 / tpq;
-	std::vector<int> iFinger(midi.getTrackCount(), 0);
-
-	delay(500);
-	for (int t = 0; t < midi.getTrackCount(); t++)
-	{
-		for (int e = 0; e < midi[t].size(); e++)
-		{
-			getTempoSPT(midi[t][e], tpq, &spt);
-
-			if (midi[t][e].isMeta()) continue;
-
-			skipFingerMetadata(finger, &iFinger, midi.getSplitTrack(t, e));
-			delayMicroseconds(spt * midi[t][e].tick * 1000000);
-			sendMidiMessage(container->io, midi[t][e]);
-			sendFeedback(container->rf, finger, &iFinger, midi.getSplitTrack(t, e));
-
-			if (keypress == STOP_BUTTON)
-			{
-				keypress = 0;
-				input.join();
-				return;
-			}
-		}
-	}
-	terminator = false;
-	input.join();
-}
-
-/**
  * Get Play Mode
  *
  * This function ask the user to select the play mode
@@ -318,11 +233,7 @@ PlayMode getPlayMode(Container *container)
  */
 void setPlayMode(MidiFile *midi, PlayMode mode)
 {
-	if (mode == LEFT_HAND)
-		midi->deleteTrack(0);
-	else if (mode == RIGHT_HAND)
-		midi->deleteTrack(1);
-	else
+	if (mode == BOTH_HANDS)
 		midi->joinTracks();
 }
 
@@ -358,21 +269,6 @@ void sendMidiMessage(MidiIO *io, MidiEvent e)
 }
 
 /**
- * Skip Finger Metadata
- * 
- * @param finger finger data
- * @param i      finger index
- * @param t      active track
- */
-void skipFingerMetadata(FingerData finger, std::vector<int> *i, int t)
-{
-	FingerEvent e = finger[t][i->at(t)];
-
-	if (e.getCommand() == 0xF9)
-		i->at(t)++;
-}
-
-/**
  * Send Feedback to Hand Module
  *
  * This method use the radio transceiver to send payload to hand module
@@ -385,7 +281,7 @@ void skipFingerMetadata(FingerData finger, std::vector<int> *i, int t)
 void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t)
 {
 	FingerEvent e = f[t][i->at(t)];
-	unsigned char command = e.getCommand();
+	unsigned char command = 0x90;
 	unsigned char finger = e.getData();
 	unsigned char payload = 0;
 
