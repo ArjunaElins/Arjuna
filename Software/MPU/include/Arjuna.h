@@ -53,6 +53,7 @@
 #define 	LEFT_HAND_MODE_BUTTON 	'#'
 
 enum PlayMode {BOTH_HANDS, LEFT_HAND, RIGHT_HAND};
+enum MPUOperation {PLAYER, EVALUATOR};
 
 /**
  * Main Function
@@ -110,15 +111,28 @@ void printSongList(std::ifstream *songList);
 std::string selectSong(Container *container, std::ifstream *songList);
 
 /**
+ * Start MIDI Processing Algorithm
+ *
+ * This function is a bootstrap for the MIDI Processing Algorithm.
+ * It will call the player or the evaluator, depending on user selection
+ * 
+ * @param container hadrware handler
+ * @param songPath  selected song path
+ * @param mode      MPA operation mode
+ */
+void startMPA(Container *container, std::string songPath, MPUOperation mode);
+
+/**
  * Song Player
  *
  * This method is used to play MIDI song. It will open the MIDI file,
  * calculate some numbers, and send MIDI message to output port
  * 
  * @param  container hardware handler
- * @param  songPath  MIDI song location
+ * @param  midi 	 MIDI file handler
+ * @param  finger 	 finger data handler
  */
-void songPlayer(Container *container, std::string songPath);
+void songPlayer(Container *container, MidiFile midi, FingerData finger);
 
 /**
  * Get Play Mode

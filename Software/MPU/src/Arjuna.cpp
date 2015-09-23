@@ -80,7 +80,9 @@ void startRoutine(Container *container)
 		if (keypress == SELECT_SONG_BUTTON)
 			songPath.assign(songSelector(container));
 		else if (keypress == PLAY_SONG_BUTTON)
-			songPlayer(container, songPath);
+			startMPA(container, songPath, PLAYER);
+		else if (keypress == EVALUATOR_BUTTON)
+			startMPA(container, songPath, EVALUATOR);
 		else if (keypress == STOP_BUTTON)
 			return;
 	}
@@ -184,34 +186,51 @@ std::string selectSong(Container *container, std::ifstream *songList)
 }
 
 /**
+ * Start MIDI Processing Algorithm
+ *
+ * This function is a bootstrap for the MIDI Processing Algorithm.
+ * It will call the player or the evaluator, depending on user selection
+ * 
+ * @param container hadrware handler
+ * @param songPath  selected song path
+ * @param mode      MPA operation mode
+ */
+void startMPA(Container *container, std::string songPath, MPUOperation mode)
+{
+	// MIDI and finger data preparation
+	MidiFile midi(songPath + ".mid");
+	midi.deltaTicks();
+	setPlayMode(&midi, getPlayMode(container));
+	FingerData finger(songPath + ".fgr");
+
+	if (mode == PLAYER)
+	{
+		std::cout << "Playing song \"" << songPath << "\"...\n";
+		songPlayer(container, midi, finger);
+	}
+}
+
+/**
  * Song Player
  *
  * This method is used to play MIDI song. It will open the MIDI file,
  * calculate some numbers, and send MIDI message to output port
  * 
  * @param  container hardware handler
- * @param  songPath  MIDI song location
+ * @param  midi 	 MIDI file handler
+ * @param  finger 	 finger data handler
  */
-void songPlayer(Container *container, std::string songPath)
+void songPlayer(Container *container, MidiFile midi, FingerData finger)
 {
-	// MIDI data preparation
-	MidiFile midi(songPath + ".mid");
-	midi.deltaTicks();
-	int tpq = midi.getTicksPerQuarterNote();
-	double spt = 0.5 / tpq;
-
-	// Finger data preparation
-	FingerData finger(songPath + ".fgr");
-	std::vector<int> iFinger(midi.getTrackCount(), 0);
-
-	setPlayMode(&midi, getPlayMode(container));
-
-	std::cout << "Playing song \"" << songPath << "\"...\n";
 	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
 
 	char keypress;
 	bool terminator = true;
 	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
+
+	int tpq = midi.getTicksPerQuarterNote();
+	double spt = 0.5 / tpq;
+	std::vector<int> iFinger(midi.getTrackCount(), 0);
 
 	delay(500);
 	for (int t = 0; t < midi.getTrackCount(); t++)
