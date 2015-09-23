@@ -35,61 +35,150 @@
 #define _ARJUNA_H_
 
 #include <iostream>
-#include <thread>
 #include <fstream>
-#include <wiringPi.h>
+#include <string>
+
+#include "Setup.h"
 #include "MidiFile.h"
-#include "WiringPiKeypad.h"
-#include "ORF24.h"
-#include "MidiIO.h"
 #include "FingerData.h"
 
-struct Key
-{
-	int track;
-	unsigned char note;
-	unsigned char finger;
-};
+enum PlayMode {BOTH_HANDS, LEFT_HAND, RIGHT_HAND};
 
-enum PlayMode {PLAY_ALL, PLAY_CHECKPOINT, EVALUATE_ALL, EVALUATE_CHECKPOINT};
-enum Hand {RIGHT_HAND, LEFT_HAND};
-
+/**
+ * Main Function
+ *
+ * This is the starting point of the program.
+ * 
+ * @param  argc arg count
+ * @param  argv arg vector
+ * @return      status
+ */
 int main(int argc, char *argv[]);
-void menu(void);
 
-/*
- |------------------------------------------------
- | Initialization and cleanup 	
- |------------------------------------------------
+/**
+ * Start Application Routine
+ *
+ * This routine start by showing main menu. It will handle user input
+ * and call other methods depending on the input.
  */
+void startRoutine(struct Container *container);
 
-void initMidiIO(void);
-void initRadio(void);
-void initRadio(bool debug);
-void initKeypad(void);
-void cleanup(void);
-
-/*
- |------------------------------------------------
- | Player	
- |------------------------------------------------
+/**
+ * Show Application Menu
+ *
+ * In this screen, user can select the application operation.
  */
+void showMenu(void);
 
-std::string selectSong(void);
-void play(std::string songPath);
-void startPlayer(std::string songPath, PlayMode mode);
-void parseCommand(FingerEvent event, PlayMode mode, Hand hand);
+/**
+ * Song Selector
+ *
+ * This method will start the song selector.
+ * 
+ * @param container hardware handler
+ */
+std::string songSelector(struct Container *container);
+
+/**
+ * Print Song List
+ *
+ * This method will parse every line of the file handler and print it
+ * to stdout
+ * 
+ * @param songList [description]
+ */
+void printSongList(std::ifstream *songList);
+
+/**
+ * Select Song
+ *
+ * This method will ask the user to choose from opened song list
+ * 
+ * @param  songList song list handler
+ * @return          song name
+ */
+std::string selectSong(struct Container *container, std::ifstream *songList);
+
+/**
+ * Song Player
+ *
+ * This method is used to play MIDI song. It will open the MIDI file,
+ * calculate some numbers, and send MIDI message to output port
+ * 
+ * @param  container hardware handler
+ * @param  songPath  MIDI song location
+ */
+void songPlayer(struct Container *container, std::string songPath);
+
+/**
+ * Get Play Mode
+ *
+ * This function ask the user to select the play mode
+ * 
+ * @param  container hardware handler
+ * @return           play mode
+ */
+PlayMode getPlayMode(Container *container);
+
+/**
+ * Set Play Mode
+ *
+ * This function prepares the MIDI file to play in right, left, or both hand modes
+ * 
+ * @param midi MIDI object
+ * @param mode Chosen mode
+ */
+void setPlayMode(MidiFile *midi, PlayMode mode);
+
+/**
+ * Get Tempo in Second Per Tick
+ * 	
+ * @param e   	MidiEvent
+ * @param tpq 	tick peq quarter
+ * @param spt 	second per tick
+ */
+void getTempoSPT(MidiEvent e, int tpq, double *spt);
+
+/**
+ * Send MIDI Message
+ *
+ * This method will form a MIDI message container and send it to MIDI output port
+ * 
+ * @param io MIDI i/O port
+ * @param e  MIDI event
+ */
+void sendMidiMessage(MidiIO *io, MidiEvent e);
+
+/**
+ * Skip Finger Metadata
+ * 
+ * @param finger finger data
+ * @param i      finger index
+ * @param t      active track
+ */
+void skipFingerMetadata(FingerData finger, std::vector<int> *i, int t);
+
+/**
+ * Send Feedback to Hand Module
+ *
+ * This method use the radio transceiver to send payload to hand module
+ * 
+ * @param rf radio handler
+ * @param f  finger data
+ * @param i  finger index
+ * @param t  active track
+ */
+void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t);
+
+/**
+ * Inverse Finger Number
+ *
+ * Command for right hand module need to be inverted before sending.
+ * This function will do the inversion.
+ * 
+ * @param  finger finger number
+ * @return        inverted finger number
+ */
 unsigned char inverse(unsigned char finger);
-void keypadHandler(char *keypress, bool *terminator);
-
-/*
- |------------------------------------------------
- | Evaluator	
- |------------------------------------------------
- */
-void evaluate(std::string songPath);
-void startEvaluator(std::string songPath, PlayMode mode);
-std::string getKey(int key);
-void parseCommand(Hand hand, unsigned char in, unsigned char note, char finger);
 
 #endif

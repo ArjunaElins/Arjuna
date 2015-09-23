@@ -33,499 +33,336 @@
 
 #include "Arjuna.h"
 
-MidiIO *io;
-ORF24 *rf;
-WiringPiKeypad *keypad;
-
+/**
+ * Main Function
+ *
+ * This is the starting point of the program.
+ * 
+ * @param  argc arguments count
+ * @param  argv arguments vector
+ * @return      status
+ */
 int main(int argc, char *argv[])
 {
-	wiringPiSetup();
-	initMidiIO();
-	initRadio();
-	initKeypad();
+	struct Args args = getArgs(argc, argv);
 
-	char keypress;
-	std::string songPath;
+	struct Container container;
 
-	while (1)
+	if (initHardware(&container, &args))
 	{
-		menu();
-		keypress = keypad->getKey();
-
-		if (keypress == 'A')
-			songPath = selectSong();
-		else if (keypress == 'B')
-			play(songPath);
-		else if (keypress == 'C')
-			evaluate(songPath);
-		else if (keypress == 'D')
-			break;
+		std::cout << "Program is exiting..." << std::endl;
+		return -1;
 	}
 
-	cleanup();
-
-	std::cout << "Exiting...\n";
+	// Routine should have container
+	startRoutine(&container);
 
 	return 0;
 }
 
-void menu(void)
+/**
+ * Start Application Routine
+ *
+ * This routine start by showing main menu. It will handle user input
+ * and call other methods depending on the input.
+ */
+void startRoutine(struct Container *container)
 {
-	std::cout << "\nMENU\n"
-			  << " A - Select song\n"
-			  << " B - Play song\n"
-			  << " C - Start evaluating \n"
+	char keypress;
+	std::string songPath;
+	WiringPiKeypad *keypad = container->keypad;
+
+	while (1)
+	{
+		showMenu();
+		keypress = keypad->getKey();
+
+		if (keypress == '*')
+			songPath.assign(songSelector(container));
+		else if (keypress == '0')
+			songPlayer(container, songPath);
+	}
+}
+
+/**
+ * Show Application Menu
+ *
+ * In this screen, user can select the application operation.
+ */
+void showMenu(void)
+{
+	std::cout << "Welcome to Arjuna. Please select mode of operation below:" << std::endl;
+	std::cout << " A - Select Song\n"
+			  << " B - Play Song \n"
+			  << " C - Start Evaluating\n"
 			  << " D - Exit\n";
 }
 
-
-
-/*
- |------------------------------------------------
- | Initialization and cleanup 	
- |------------------------------------------------
+/**
+ * Song Selector
+ *
+ * This method will start the song selector.
+ * 
+ * @param container hardware handler
  */
-
-void initMidiIO(void)
-{
-	std::cout << "Initializing MIDI I/O...\n";
-
-	io = new MidiIO;
-	io->openMidiOutPort();
-	io->openMidiInPort();
-
-	std::cout << "MIDI I/O initialized.\n";
-}
-
-void initRadio(void)
-{
-	initRadio(false);
-}
-
-void initRadio(bool debug)
-{
-	std::cout << "Initializing radio communication...\n";
-
-	rf = new ORF24(21);
-
-	if (debug)
-		rf->enableDebug();
-
-	rf->begin();
-	rf->setPayloadSize(1);
-	rf->setChannel(76);
-	rf->setCRCLength(CRC_2_BYTE);
-	rf->setPowerLevel(RF_PA_HIGH);
-
-	std::cout << "Radio communication initialized.\n";
-}
-
-void initKeypad(void)
-{
-	std::cout << "Initializing keypad...\n";
-
-	int row[4] = {1, 2, 3, 4};
-	int column[4] = {21, 22, 23, 24};
-	std::vector<std::vector<char>> matrix {
-		{'1', '2', '3', 'A'},
-		{'4', '5', '6', 'B'},
-		{'7', '8', '9', 'C'},
-		{'*', '0', '#', 'D'}
-	};
-
-	keypad = new WiringPiKeypad(4, 4);
-	keypad->setRowPin(row);
-	keypad->setColumnPin(column);
-	keypad->setMatrix(matrix);
-
-	std::cout << "Keypad initialized.\n";
-}
-
-void cleanup(void)
-{
-	std::cout << "Cleaning up...\n";
-
-	delete io;
-	delete rf;
-	delete keypad;
-}
-
-
-
-/*
- |------------------------------------------------
- | Player	
- |------------------------------------------------
- */
-
-std::string selectSong(void)
+std::string songSelector(struct Container *container)
 {
 	const std::string basedir = "/home/arjuna/Songs/";
 
-	std::string song;
-	ifstream songList(basedir + ".songlist");
+	std::ifstream songList(basedir + ".songlist");
 
 	if (songList.is_open())
 	{
-		int i = 1;
-		std::cout << "\nSong list:\n";
+		printSongList(&songList);
+		std::string song = selectSong(container, &songList);
 
-		while (getline(songList, song))
-		{
-			std::cout << i++ << ". " << song << std::endl;
-		}
-
-		std::cout << "Press number to select song. Press 'A' to select." << std::endl;
-
-		char keypress;
-		std::string songNumber;
-
-		do
-		{
-			keypress = keypad->getKey();
-			songNumber += keypress;
-		} while (keypress != 'A');
-
-		songNumber.pop_back();
-		int number = std::stoi(songNumber);
-		songList.clear();
-		songList.seekg(0, std::ios::beg);
-
-		for (int i = 0; i < number; i++)
-		{
-			getline(songList, song);
-		}
-		std::cout << "Selected: " << song << std::endl;
-
-		std::string songPath = basedir + song + "/" + song;
-
-		return songPath;
+		return basedir + song + "/" + song;
 	}
 	else
 	{
-		std::cout << "Error opening file.\n";
-		exit(EXIT_FAILURE);
+		std::cout << "Error opening file." << std::endl;
+		return 0;
 	}
 }
 
-void play(std::string songPath)
+/**
+ * Print Song List
+ *
+ * This method will parse every line of the file handler and print it
+ * to stdout
+ * 
+ * @param songList [description]
+ */
+void printSongList(std::ifstream *songList)
 {
+	std::cout << "Song list:" << std::endl;
+
+	int i = 1;
+	std::string song;
+
+	while (getline(*songList, song))
+	{
+		std::cout << i++ << ". " << song << std::endl;
+	}
+}
+
+/**
+ * Select Song
+ *
+ * This method will ask the user to choose from opened song list
+ * 
+ * @param  songList song list handler
+ * @return          song name
+ */
+std::string selectSong(struct Container *container, std::ifstream *songList)
+{
+	std::cout << "Press number to select song. Press '*' to select." << std::endl;
+
+	char keypress;
+	std::string songNumber;
+	WiringPiKeypad *keypad = container->keypad;
+
+	do
+	{
+		keypress = keypad->getKey();
+		songNumber += keypress;
+	} while (keypress != '*');
+
+	songNumber.pop_back(); // Remove 'A' from songNumber
+	int number = std::stoi(songNumber);
+	songList->clear();
+	songList->seekg(0, std::ios::beg);
+
+	std::string song;
+	for (int i = 0; i < number; i++)
+		getline(*songList, song);
+	std::cout << "Selected: " << song << std::endl;
+
+	return song;
+}
+
+/**
+ * Song Player
+ *
+ * This method is used to play MIDI song. It will open the MIDI file,
+ * calculate some numbers, and send MIDI message to output port
+ * 
+ * @param  container hardware handler
+ * @param  songPath  MIDI song location
+ */
+void songPlayer(struct Container *container, std::string songPath)
+{
+	// MIDI data preparation
+	MidiFile midi(songPath + ".mid");
+	midi.deltaTicks();
+	int tpq = midi.getTicksPerQuarterNote();
+	double spt = 0.5 / tpq;
+
+	// Finger data preparation
+	FingerData finger(songPath + ".fgr");
+	std::vector<int> iFinger(midi.getTrackCount(), 0);
+
+	setPlayMode(&midi, getPlayMode(container));
+
 	std::cout << "Playing song \"" << songPath << "\"...\n";
 	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
 
-	startPlayer(songPath, PLAY_ALL);
-
-	std::cout << "Song stopped.\n";
-}
-
-void startPlayer(std::string songPath, PlayMode mode)
-{
-	char keypress;
-	bool terminator = true;
-	std::thread input(keypadHandler, &keypress, &terminator);
-
-	MidiFile midi(songPath + ".mid");
-	FingerData finger(songPath + ".fgr");
-
-	midi.deltaTicks();
-	int fingerTrackCount = midi.getTrackCount();
-
-	int iFinger[fingerTrackCount];
-	for (int i = 0; i < fingerTrackCount; i++)
-		iFinger[i] = 0;
-
-	if (mode == PLAY_ALL)
-		midi.joinTracks();
-
-	int tpq = midi.getTicksPerQuarterNote();
-	double spt = 0.5 / tpq;
-	int trackCount = midi.getTrackCount();
-	std::vector<unsigned char> message;
-
-	int activeTrack;
-	for (int t = 0; t < trackCount; t++)
+	delay(500);
+	for (int t = 0; t < midi.getTrackCount(); t++)
 	{
 		for (int e = 0; e < midi[t].size(); e++)
 		{
-			if (midi[t][e].getTempoSPT(tpq) > 0)
-				spt = midi[t][e].getTempoSPT(tpq);
+			getTempoSPT(midi[t][e], tpq, &spt);
 
-			if (midi[t][e].isMeta())
-				continue;
+			if (midi[t][e].isMeta()) continue;
 
-			for (unsigned int i = 0; i < midi[t][e].size(); i++)
-				message.push_back((int) midi[t][e][i]);
-
+			skipFingerMetadata(finger, &iFinger, midi.getSplitTrack(t, e));
 			delayMicroseconds(spt * midi[t][e].tick * 1000000);
-
-			activeTrack = midi.getSplitTrack(t, e);
-
-			io->sendMessage(&message);
-			if (finger[activeTrack][iFinger[activeTrack]].getCommand() == 0xF9)
-				iFinger[activeTrack]++;
-
-			parseCommand(finger[activeTrack][iFinger[activeTrack]++], mode, (Hand) activeTrack);
-
-			message.clear();
-
-			switch (keypress)
-			{
-				case 'C':
-					delay(1000);
-				case 'D':
-					keypress = 0;
-					input.join();
-					return;
-			}
+			sendMidiMessage(container->io, midi[t][e]);
+			sendFeedback(container->rf, finger, &iFinger, midi.getSplitTrack(t, e));
 		}
 	}
-
-	terminator = false;
-	input.join();
 }
 
-void evaluate(std::string songPath)
+/**
+ * Get Play Mode
+ *
+ * This function ask the user to select the play mode
+ * 
+ * @param  container hardware handler
+ * @return           play mode
+ */
+PlayMode getPlayMode(Container *container)
 {
-	std::cout << "Evaluating song \"" << songPath << "\"...\n";
-	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
+	std::cout << "Select Play Mode." << std::endl
+			  << " A - Both hands" << std::endl
+			  << " B - Right hands" << std::endl
+			  << " C - Left hands" << std::endl;
 
-	startEvaluator(songPath, EVALUATE_ALL);
-
-	std::cout << "Song stopped.\n";
-}
-
-void startEvaluator(std::string songPath, PlayMode mode)
-{
 	char keypress;
-	bool terminator = true;
-	std::thread input(keypadHandler, &keypress, &terminator);
+	PlayMode mode = BOTH_HANDS;
 
-	MidiFile midi(songPath + ".mid");
-	FingerData finger(songPath + ".fgr");
+	keypress = container->keypad->getKey();
 
-	int trackCount = midi.getTrackCount();
-	int iFinger[trackCount];
-	for (int i = 0; i < trackCount; i++)
-		iFinger[i] = 0;
+	if (keypress == 'A')
+		mode = BOTH_HANDS;
+	else if (keypress == 'B')
+		mode = RIGHT_HAND;
+	else if (keypress == 'C')
+		mode = LEFT_HAND;
 
-	midi.deltaTicks();
-	midi.joinTracks();
-
-	int iNote = 0;
-	while (keypress != 'D')
-	{
-		int dump = 0;
-		std::vector<Key> keys;
-		std::vector<std::vector<unsigned char>> messages;
-
-		do
-		{
-			Key key;
-
-			if (midi[0][iNote].isNoteOn())
-			{
-				key = {midi.getSplitTrack(0, iNote), midi[0][iNote][1]};
-				keys.push_back(key);
-			}
-			else
-			{
-				dump++;
-			}
-			iNote++;
-
-			if (iNote >= midi[0].size())
-			{
-				terminator = false;
-				input.join();
-				return;
-			}
-		} while (midi[0][iNote].tick == 0);
-
-		for (unsigned int i = 0; i < keys.size(); i++)
-		{
-			if (finger[keys[i].track][iFinger[keys[i].track]].getCommand() == 0x90)
-			{
-				keys[i].finger = finger[keys[i].track][iFinger[keys[i].track]].getData();
-				iFinger[keys[i].track]++;
-			}
-			else
-			{
-				iFinger[keys[i].track]++;
-				i--;
-			}
-		}
-
-		if (keys.size())
-		{
-			std::cout << "Expected:\t";
-			for (unsigned int i = 0; i < keys.size(); i++)
-			{
-				std::cout << getKey(keys[i].note);
-				printf("-%X\t", keys[i].finger);
-			}
-			std::cout << std::endl;
-		}
-
-
-		unsigned int expected = 0;
-		while (expected < keys.size())
-		{
-			std::vector<unsigned char> message;
-			io->getMessage(&message);
-			int nBytes = message.size();
-
-			if (nBytes > 0)
-			{
-				if (message[0] == 0x90)
-				{
-					messages.push_back(message);
-					expected++;
-				}
-			}
-
-			delay(10);
-		}
-
-		if (messages.size())
-		{
-			std::cout << "Received:\t";
-			for (unsigned int i = 0; i < messages.size(); i++)
-				std::cout << getKey(messages[i][1]) << "\t";
-			std::cout << std::endl << std::endl;
-		}
-
-		std::vector<bool> evaluation;
-		for (unsigned int i = 0; i < keys.size(); i++)
-		{
-			unsigned char wrong = 0;
-			for (unsigned int j = 0; j < messages.size(); j++)
-			{
-				if (keys[i].note == messages[j][1])
-				{
-					wrong = 0;
-					break;
-				}
-				else
-				{
-					wrong = messages[j][1];
-				}
-			}
-
-			evaluation.push_back(! wrong);
-
-			if (! evaluation[i])
-			{
-				std::cout << "Wrong key on ";
-				if (keys[i].track)
-					std::cout << "left ";
-				else
-					std::cout << "right ";
-				std::cout << "hand.\n";
-				parseCommand((Hand) keys[i].track, wrong, keys[i].note, keys[i].finger);
-				delayMicroseconds(200);
-			}
-		}
-
-		for (unsigned int i = 0; i < evaluation.size(); i++)
-		{
-			if (! evaluation[i])
-			{
-				for (unsigned int j = 0; j < keys.size(); j++)
-				{
-					do
-					{
-						iFinger[keys[j].track]--;
-					}
-					while (finger[keys[j].track][iFinger[keys[j].track]].getCommand() != 0x90);
-				}
-
-				iNote -= (keys.size() + dump);
-				break;
-			}
-		}
-	}
+	return mode;
 }
 
-std::string getKey(int key)
+/**
+ * Set Play Mode
+ *
+ * This function prepares the MIDI file to play in right, left, or both hand modes
+ * 
+ * @param midi MIDI object
+ * @param mode Chosen mode
+ */
+void setPlayMode(MidiFile *midi, PlayMode mode)
 {
-	int octave;
-	int workNote;
-	std::string note;
-
-	octave = key / 12;
-	workNote = key % 12;
-
-	switch (workNote + 1)
-	{
-		case 1:		note = "C";		break;
-		case 2:		note = "C#";	break;
-		case 3:		note = "D";		break;
-		case 4:		note = "D#";	break;
-		case 5:		note = "E";		break;
-		case 6:		note = "F";		break;
-		case 7:		note = "F#";	break;
-		case 8:		note = "G";		break;
-		case 9:		note = "G#";	break;
-		case 10:	note = "A";		break;
-		case 11:	note = "A#";	break;
-		case 12:	note = "B";		break;
-	}
-
-	note.append(to_string(octave));
-
-	return note;
+	if (mode == LEFT_HAND)
+		midi->deleteTrack(0);
+	else if (mode == RIGHT_HAND)
+		midi->deleteTrack(1);
+	else
+		midi->joinTracks();
 }
 
-void parseCommand(FingerEvent event, PlayMode mode, Hand hand)
+/**
+ * Get Tempo in Second Per Tick
+ * 	
+ * @param e   	MidiEvent
+ * @param tpq 	tick peq quarter
+ * @param spt 	second per tick
+ */
+void getTempoSPT(MidiEvent e, int tpq, double *spt)
 {
-	unsigned char command = event.getCommand();
-	unsigned char finger = event.getData();
+	if (e.getTempoSPT(tpq) > 0)
+		*spt = e.getTempoSPT(tpq);
+}
+
+/**
+ * Send MIDI Message
+ *
+ * This method will form a MIDI message container and send it to MIDI output port
+ * 
+ * @param io MIDI i/O port
+ * @param e  MIDI event
+ */
+void sendMidiMessage(MidiIO *io, MidiEvent e)
+{
+	std::vector<unsigned char> message;
+
+	for (unsigned int i = 0; i < e.size(); i++)
+		message.push_back((int) e[i]);
+
+	io->sendMessage(&message);
+}
+
+/**
+ * Skip Finger Metadata
+ * 
+ * @param finger finger data
+ * @param i      finger index
+ * @param t      active track
+ */
+void skipFingerMetadata(FingerData finger, std::vector<int> *i, int t)
+{
+	FingerEvent e = finger[t][i->at(t)];
+
+	if (e.getCommand() == 0xF9)
+		i->at(t)++;
+}
+
+/**
+ * Send Feedback to Hand Module
+ *
+ * This method use the radio transceiver to send payload to hand module
+ * 
+ * @param rf radio handler
+ * @param f  finger data
+ * @param i  finger index
+ * @param t  active track
+ */
+void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t)
+{
+	FingerEvent e = f[t][i->at(t)];
+	unsigned char command = e.getCommand();
+	unsigned char finger = e.getData();
 	unsigned char payload = 0;
 
-	if (hand == RIGHT_HAND)
+	if (t) // Left hand
+	{
+		rf->openWritingPipe("ArS02");
+	}
+	else // Right hand
 	{
 		finger = inverse(finger);
 		rf->openWritingPipe("ArS01");
 	}
-	else
+
+	if (command == 0x80 || command == 0x90)
 	{
-		rf->openWritingPipe("ArS02");
+		payload = command | (finger - 1) * 2;
+		rf->write(&payload, 1);
 	}
 
-	if (mode == PLAY_ALL || mode == PLAY_CHECKPOINT)
-	{
-		if (command == 0x80 || command == 0x90)
-		{
-			payload = command | (finger - 1) * 2;
-			rf->write(&payload, 1);
-		}
-	}
+	i->at(t)++;
 }
 
-void parseCommand(Hand hand, unsigned char in, unsigned char note, char finger)
-{
-	unsigned char payload = 0;
-
-	if (hand == RIGHT_HAND)
-	{
-		finger = inverse(finger);
-		rf->openWritingPipe("ArS01");
-	}
-	else
-	{
-		rf->openWritingPipe("ArS02");
-	}
-
-	if (note > in)
-		payload = 0x90 | (finger * 2 - 1);
-	else
-		payload = 0x90 | (finger * 2 - 2);
-
-	printf("%X\n", payload);
-
-	rf->write(&payload, 1);
-}
-
+/**
+ * Inverse Finger Number
+ *
+ * Command for right hand module need to be inverted before sending.
+ * This function will do the inversion.
+ * 
+ * @param  finger finger number
+ * @return        inverted finger number
+ */
 unsigned char inverse(unsigned char finger)
 {
 	unsigned char inv = 0;
@@ -540,15 +377,4 @@ unsigned char inverse(unsigned char finger)
 	}
 
 	return inv;
-}
-
-void keypadHandler(char *keypress, bool *terminator)
-{
-	while (1)
-	{
-		*keypress = keypad->getKey(terminator);
-
-		if (*keypress == 'D')
-			break;
-	}
 }
