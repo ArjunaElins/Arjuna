@@ -61,7 +61,7 @@ int main(int argc, char *argv[]);
  * This routine start by showing main menu. It will handle user input
  * and call other methods depending on the input.
  */
-void startRoutine(struct Container *container);
+void startRoutine(Container *container);
 
 /**
  * Show Application Menu
@@ -77,7 +77,7 @@ void showMenu(void);
  * 
  * @param container hardware handler
  */
-std::string songSelector(struct Container *container);
+std::string songSelector(Container *container);
 
 /**
  * Print Song List
@@ -97,7 +97,7 @@ void printSongList(std::ifstream *songList);
  * @param  songList song list handler
  * @return          song name
  */
-std::string selectSong(struct Container *container, std::ifstream *songList);
+std::string selectSong(Container *container, std::ifstream *songList);
 
 /**
  * Song Player
@@ -108,7 +108,7 @@ std::string selectSong(struct Container *container, std::ifstream *songList);
  * @param  container hardware handler
  * @param  songPath  MIDI song location
  */
-void songPlayer(struct Container *container, std::string songPath);
+void songPlayer(Container *container, std::string songPath);
 
 /**
  * Get Play Mode
