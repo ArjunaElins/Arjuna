@@ -43,12 +43,10 @@
 class FingerEvent
 {
 private:
-	int eventLength;
-	std::vector<char> data;
+	char data;
 public:
-	void push(char d);
+	void setData(char d);
 	char getData(void);
-	char operator[](int i);
 	bool isCheckpoint(void);
 };
 
@@ -56,13 +54,11 @@ class FingerTrack
 {
 private:
 	int trackLength;
-	int eventLength = 0;
 	std::vector<FingerEvent> events;
 public:
 	void setTrackLength(char *p);
 	int getTrackLength(void);
 	void push(FingerEvent event);
-	int getEventLength(void);
 	FingerEvent operator[](int i);
 };
 
