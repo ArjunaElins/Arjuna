@@ -37,10 +37,20 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <thread>
 
 #include "Setup.h"
 #include "MidiFile.h"
 #include "FingerData.h"
+
+#define 	SELECT_SONG_BUTTON	'*'
+#define		PLAY_SONG_BUTTON	'0'
+#define		EVALUATOR_BUTTON	'#'
+#define 	STOP_BUTTON			'7'
+
+#define		BOTH_HANDS_MODE_BUTTON	'*'
+#define		RIGHT_HAND_MODE_BUTTON	'0'
+#define 	LEFT_HAND_MODE_BUTTON 	'#'
 
 enum PlayMode {BOTH_HANDS, LEFT_HAND, RIGHT_HAND};
 
@@ -180,5 +190,17 @@ void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t);
  * @return        inverted finger number
  */
 unsigned char inverse(unsigned char finger);
+
+/**
+ * Keypad Handler
+ *
+ * This function should be called in separate thread to wair for user action
+ * while doing other operation
+ * 
+ * @param keypad     keypad handler
+ * @param keypress   keypress handler
+ * @param terminator keypad terminator
+ */
+void keypadHandler(WiringPiKeypad *keypad, char *keypress, bool *terminator);
 
 #endif

@@ -77,10 +77,12 @@ void startRoutine(Container *container)
 		showMenu();
 		keypress = keypad->getKey();
 
-		if (keypress == '*')
+		if (keypress == SELECT_SONG_BUTTON)
 			songPath.assign(songSelector(container));
-		else if (keypress == '0')
+		else if (keypress == PLAY_SONG_BUTTON)
 			songPlayer(container, songPath);
+		else if (keypress == STOP_BUTTON)
+			return;
 	}
 }
 
@@ -166,7 +168,7 @@ std::string selectSong(Container *container, std::ifstream *songList)
 	{
 		keypress = keypad->getKey();
 		songNumber += keypress;
-	} while (keypress != '*');
+	} while (keypress != SELECT_SONG_BUTTON);
 
 	songNumber.pop_back(); // Remove 'A' from songNumber
 	int number = std::stoi(songNumber);
@@ -207,6 +209,10 @@ void songPlayer(Container *container, std::string songPath)
 	std::cout << "Playing song \"" << songPath << "\"...\n";
 	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
 
+	char keypress;
+	bool terminator = true;
+	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
+
 	delay(500);
 	for (int t = 0; t < midi.getTrackCount(); t++)
 	{
@@ -220,8 +226,17 @@ void songPlayer(Container *container, std::string songPath)
 			delayMicroseconds(spt * midi[t][e].tick * 1000000);
 			sendMidiMessage(container->io, midi[t][e]);
 			sendFeedback(container->rf, finger, &iFinger, midi.getSplitTrack(t, e));
+
+			if (keypress == STOP_BUTTON)
+			{
+				keypress = 0;
+				input.join();
+				return;
+			}
 		}
 	}
+	terminator = false;
+	input.join();
 }
 
 /**
@@ -244,11 +259,11 @@ PlayMode getPlayMode(Container *container)
 
 	keypress = container->keypad->getKey();
 
-	if (keypress == 'A')
+	if (keypress == BOTH_HANDS_MODE_BUTTON)
 		mode = BOTH_HANDS;
-	else if (keypress == 'B')
+	else if (keypress == RIGHT_HAND_MODE_BUTTON)
 		mode = RIGHT_HAND;
-	else if (keypress == 'C')
+	else if (keypress == LEFT_HAND_MODE_BUTTON)
 		mode = LEFT_HAND;
 
 	return mode;
@@ -377,4 +392,27 @@ unsigned char inverse(unsigned char finger)
 	}
 
 	return inv;
+}
+
+/**
+ * Keypad Handler
+ *
+ * This function should be called in separate thread to wair for user action
+ * while doing other operation
+ * 
+ * @param keypad     keypad handler
+ * @param keypress   keypress handler
+ * @param terminator keypad terminator
+ */
+void keypadHandler(WiringPiKeypad *keypad, char *keypress, bool *terminator)
+{
+	while (1)
+	{
+		*keypress = keypad->getKey(terminator);
+
+		if (*keypress == STOP_BUTTON)
+		{
+			break;
+		}
+	}
 }
