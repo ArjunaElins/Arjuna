@@ -177,6 +177,15 @@ bool getUnisonNote(MidiFile *midi, int *m, int t, std::vector<Key> *keys);
 void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> *keys);
 
 /**
+ * Get MIDI Input
+ * 
+ * @param io       MIDI IO handler
+ * @param expected number of expected input
+ * @param messages MIDI messages container
+ */
+void getInput(MidiIO *io, unsigned int expected, std::vector<std::vector<unsigned char>> *messages);
+
+/**
  * Get Play Mode
  *
  * This function ask the user to select the play mode

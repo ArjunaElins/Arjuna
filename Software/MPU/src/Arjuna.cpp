@@ -271,8 +271,39 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 	while (status)
 	{
 		std::vector<Key> keys;
+		std::vector<std::vector<unsigned char>> messages;
+
 		status = getUnisonNote(midi, &m, t, &keys);
 		getUnisonFinger(finger, &f, &keys);
+		getInput(container->io, keys.size(), &messages);
+	}
+}
+
+/**
+ * Get MIDI Input
+ * 
+ * @param io       MIDI IO handler
+ * @param expected number of expected input
+ * @param messages MIDI messages container
+ */
+void getInput(MidiIO *io, unsigned int expected, std::vector<std::vector<unsigned char>> *messages)
+{
+	unsigned int i = 0;
+	while (i < expected)
+	{
+		std::vector<unsigned char> message;
+		io->getMessage(&message);
+
+		if (message.size() > 0)
+		{
+ 			if (message[0] == 0x90)
+			{
+				messages->push_back(message);
+				i++;
+			}
+		}
+
+		delay(10);
 	}
 }
 
