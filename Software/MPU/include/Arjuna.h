@@ -165,6 +165,17 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
  * @return      status
  */
 bool getUnisonNote(MidiFile *midi, int *m, int t, std::vector<Key> *keys);
+
+/**
+ * Get Unison Finger
+ * This function groups finger played at the same time
+ * 
+ * @param finger finger data handler
+ * @param f      finger data index
+ * @param keys   Keys container
+ */
+void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> *keys);
+
 /**
  * Get Play Mode
  *

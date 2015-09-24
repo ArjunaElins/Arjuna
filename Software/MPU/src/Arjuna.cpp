@@ -264,14 +264,15 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode)
 {
 	int t = (mode == LEFT_HAND) ? 1 : 0;
-	std::vector<char> iFinger(2, 0);
-
 	int m = 0;
+	std::vector<char> f(2, 0);
 	bool status = true;
+
 	while (status)
 	{
 		std::vector<Key> keys;
 		status = getUnisonNote(midi, &m, t, &keys);
+		getUnisonFinger(finger, &f, &keys);
 	}
 }
 
@@ -301,12 +302,29 @@ bool getUnisonNote(MidiFile *midi, int *m, int t, std::vector<Key> *keys)
 		}
 		*m += 1;
 
-		if (*m < (*midi)[0].size())
+		if (*m >= (*midi)[0].size())
 			status = false;
 
 	} while (midi->getEvent(t, *m).tick == 0);
-
 	return status;
+}
+
+/**
+ * Get Unison Finger
+ * This function groups finger played at the same time
+ * 
+ * @param finger finger data handler
+ * @param f      finger data index
+ * @param keys   Keys container
+ */
+void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> *keys)
+{
+	for(unsigned int i = 0; i < keys->size(); i++)
+	{
+		int t = keys->at(i).track;
+		keys->at(i).finger = finger->getData(t, f->at(t));
+		f->at(t) += 1;
+	}
 }
 
 /**

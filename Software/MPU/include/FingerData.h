@@ -74,6 +74,7 @@ public:
 	FingerData(std::string filepath);
 	int getTrackCount(void);
 	FingerTrack operator[](int i);
+	char getData(int t, int e);
 	void printAllEvents(void);
 };
 

@@ -100,6 +100,11 @@ int FingerData::getTrackCount(void)
 	return trackCount;
 }
 
+char FingerData::getData(int t, int e)
+{
+	return tracks[t][e].getData();
+}
+
 void FingerData::printAllEvents(void)
 {
 	for (int t = 0; t < trackCount; t++)
