@@ -34,7 +34,7 @@
 
 #define RIGHT_HAND  "ArS01"
 #define LEFT_HAND   "ArS02"
-#define ADDRESS     LEFT_HAND
+#define ADDRESS     RIGHT_HAND
 
 class Motor
 {
@@ -108,7 +108,7 @@ class Motor
 #define ALL_MOTOR_OFF   0xC0
 #define ALL_MOTOR_ON    0xD0
 
-RF24 radio(18, 10);
+RF24 radio(19, 10);
 byte data;
 Motor motor[MOTOR_COUNT];
 int motorPin[MOTOR_COUNT] = {1, 0, 2, 3, 4, 5, 6, 7, 8, 9};
