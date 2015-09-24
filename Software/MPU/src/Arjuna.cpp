@@ -78,11 +78,21 @@ void startRoutine(Container *container)
 		keypress = keypad->getKey();
 
 		if (keypress == SELECT_SONG_BUTTON)
+		{
 			songPath.assign(songSelector(container));
+		}
 		else if (keypress == PLAY_SONG_BUTTON)
-			songPlayer(container, songPath);
+		{
+			startMPA(container, songPath, PLAYER);
+		}
+		else if (keypress == EVALUATOR_BUTTON)
+		{
+			startMPA(container, songPath, EVALUATOR);
+		}
 		else if (keypress == STOP_BUTTON)
+		{
 			return;
+		}
 	}
 }
 
@@ -183,6 +193,35 @@ std::string selectSong(Container *container, std::ifstream *songList)
 	return song;
 }
 
+/* Start MIDI Processing Algorithm
+ *
+ * This function is a bootstrap for the MIDI Processing Algorithm.
+ * It will call the player or the evaluator, depending on user selection
+ * 
+ * @param container hadrware handler
+ * @param songPath  selected song path
+ * @param mode      MPA operation mode
+ */
+void startMPA(Container *container, std::string songPath, MPUOperation operation)
+{
+	MidiFile midi(songPath + ".mid");
+	FingerData finger(songPath + ".fgr");
+
+	PlayMode mode = getPlayMode(container->keypad);
+	setPlayMode(&midi, mode);
+
+	if (operation == PLAYER)
+	{
+		std::cout << "Playing song \"" + songPath + "\"..." << std::endl;
+		play(container, &midi, &finger, mode);
+	}
+	else
+	{
+		std::cout << "Evaluating song \"" + songPath + "\"..." << std::endl;
+		evaluate(container, &midi, &finger, mode);
+	}
+}
+
 /**
  * Song Player
  *
@@ -190,53 +229,167 @@ std::string selectSong(Container *container, std::ifstream *songList)
  * calculate some numbers, and send MIDI message to output port
  * 
  * @param  container hardware handler
- * @param  songPath  MIDI song location
+ * @param  midi 	 MIDI file handler
+ * @param  finger 	 finger data handler
+ * @param  mode 	 selected play mode
  */
-void songPlayer(Container *container, std::string songPath)
+void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode)
 {
-	// MIDI data preparation
-	MidiFile midi(songPath + ".mid");
-	midi.deltaTicks();
-	int tpq = midi.getTicksPerQuarterNote();
+	int tpq = midi->getTicksPerQuarterNote();
 	double spt = 0.5 / tpq;
-
-	// Finger data preparation
-	FingerData finger(songPath + ".fgr");
-	std::vector<int> iFinger(midi.getTrackCount(), 0);
-
-	setPlayMode(&midi, getPlayMode(container));
-
-	std::cout << "Playing song \"" << songPath << "\"...\n";
-	std::cout << "Press C to go to next checkpoint. Press D to stop.\n";
-
-	char keypress;
-	bool terminator = true;
-	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
+	int t = (mode == LEFT_HAND) ? 1 : 0;
 
 	delay(500);
-	for (int t = 0; t < midi.getTrackCount(); t++)
+	for (int e = 0; e < (*midi)[t].getSize(); e++)
 	{
-		for (int e = 0; e < midi[t].size(); e++)
+		delayMicroseconds(spt * midi->getEvent(t, e).tick * 1000000);
+		if (midi->getEvent(t, e).isMeta())
+			continue;
+		sendMidiMessage(container->io, midi->getEvent(t, e));
+
+		// Send Feedback
+	}
+}
+
+/**
+ * Song Evaluator
+ *
+ * This function is used to compare MIDI input with MIDI data and give
+ * response to hands odule
+ * @param container handware handler
+ * @param midi      MIDI file handler
+ * @param finger    finger data handler
+ * @param mode      selected play mode
+ */
+void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode)
+{
+	int t = (mode == LEFT_HAND) ? 1 : 0;
+	int m = 0;
+	std::vector<char> f(2, 0);
+	bool status = true;
+
+	while (status)
+	{
+		std::vector<Key> keys;
+		status = getUnisonNote(midi, &m, t, &keys);
+		getUnisonFinger(finger, &f, &keys);
+		getInputAndEvaluate(container->io, keys);
+	}
+}
+
+/**
+ * Get Unison Note
+ *
+ * This function groups note played at the same time
+ * 
+ * @param  midi MIDI file handler
+ * @param  m    MIDI file index
+ * @param  t    MIDI track number
+ * @param  keys Keys container
+ * @return      status
+ */
+bool getUnisonNote(MidiFile *midi, int *m, int t, std::vector<Key> *keys)
+{
+	bool status = true;
+	do
+	{
+		Key key;
+
+		if (midi->getEvent(t, *m).isNoteOn())
 		{
-			getTempoSPT(midi[t][e], tpq, &spt);
+			key.track = midi->getSplitTrack(t, *m);
+			key.note = midi->getEvent(t, *m)[1];
+			keys->push_back(key);
+		}
+		*m += 1;
 
-			if (midi[t][e].isMeta()) continue;
+		if (*m >= (*midi)[0].size())
+			status = false;
 
-			skipFingerMetadata(finger, &iFinger, midi.getSplitTrack(t, e));
-			delayMicroseconds(spt * midi[t][e].tick * 1000000);
-			sendMidiMessage(container->io, midi[t][e]);
-			sendFeedback(container->rf, finger, &iFinger, midi.getSplitTrack(t, e));
+	} while (midi->getEvent(t, *m).tick == 0 && status);
 
-			if (keypress == STOP_BUTTON)
+	return status;
+}
+
+/**
+ * Get Unison Finger
+ * This function groups finger played at the same time
+ * 
+ * @param finger finger data handler
+ * @param f      finger data index
+ * @param keys   Keys container
+ */
+void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> *keys)
+{
+	for(unsigned int i = 0; i < keys->size(); i++)
+	{
+		int t = keys->at(i).track;
+		keys->at(i).finger = finger->getData(t, f->at(t));
+		f->at(t) += 1;
+	}
+}
+
+/**
+ * Get MIDI Input
+ * 
+ * @param io       MIDI IO handler
+ * @param expected number of expected input
+ * @param messages MIDI messages container
+ */
+void getInputAndEvaluate(MidiIO *io, std::vector<Key> keys)
+{
+	unsigned int i = 0;
+
+	while (i < keys.size())
+	{
+		std::vector<unsigned char> message;
+		io->getMessage(&message);
+
+		if (message.size() > 0)
+		{
+ 			if (message[0] == 0x90)
 			{
-				keypress = 0;
-				input.join();
-				return;
+				if (! compare(&keys, message[1]))
+				{
+					printf("Wrong.\nExpected: ");
+					for (unsigned int i = 0; i < keys.size(); i++)
+						printf("%X ", keys[i].note);
+					
+					printf("\nReceived: %X\n", message[1]);
+				}
 			}
 		}
+
+		delay(10);
 	}
-	terminator = false;
-	input.join();
+}
+
+/**
+ * Compare MIDI Input with MIDI Data
+ * 
+ * @param  keys MIDI Data
+ * @param  note MIDI Input
+ * @return      Compare result
+ */
+bool compare(std::vector<Key> *keys, unsigned char note)
+{
+	bool wrong = true;
+
+	for (unsigned int i = 0; i < keys->size(); i++)
+	{
+		if (keys->at(i).note != note)
+		{
+			wrong = true;			
+		}
+		else
+		{
+			wrong = false;
+			keys->erase(keys->begin() + i);
+			break;
+		}
+	}
+
+	return !wrong;
 }
 
 /**
@@ -244,10 +397,10 @@ void songPlayer(Container *container, std::string songPath)
  *
  * This function ask the user to select the play mode
  * 
- * @param  container hardware handler
- * @return           play mode
+ * @param  keypad 	keypad handler
+ * @return          play mode
  */
-PlayMode getPlayMode(Container *container)
+PlayMode getPlayMode(WiringPiKeypad *keypad)
 {
 	std::cout << "Select Play Mode." << std::endl
 			  << " A - Both hands" << std::endl
@@ -257,7 +410,7 @@ PlayMode getPlayMode(Container *container)
 	char keypress;
 	PlayMode mode = BOTH_HANDS;
 
-	keypress = container->keypad->getKey();
+	keypress = keypad->getKey();
 
 	if (keypress == BOTH_HANDS_MODE_BUTTON)
 		mode = BOTH_HANDS;
@@ -279,11 +432,9 @@ PlayMode getPlayMode(Container *container)
  */
 void setPlayMode(MidiFile *midi, PlayMode mode)
 {
-	if (mode == LEFT_HAND)
-		midi->deleteTrack(0);
-	else if (mode == RIGHT_HAND)
-		midi->deleteTrack(1);
-	else
+	midi->deltaTicks();
+
+	if (mode == BOTH_HANDS)
 		midi->joinTracks();
 }
 
@@ -319,21 +470,6 @@ void sendMidiMessage(MidiIO *io, MidiEvent e)
 }
 
 /**
- * Skip Finger Metadata
- * 
- * @param finger finger data
- * @param i      finger index
- * @param t      active track
- */
-void skipFingerMetadata(FingerData finger, std::vector<int> *i, int t)
-{
-	FingerEvent e = finger[t][i->at(t)];
-
-	if (e.getCommand() == 0xF9)
-		i->at(t)++;
-}
-
-/**
  * Send Feedback to Hand Module
  *
  * This method use the radio transceiver to send payload to hand module
@@ -346,7 +482,7 @@ void skipFingerMetadata(FingerData finger, std::vector<int> *i, int t)
 void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t)
 {
 	FingerEvent e = f[t][i->at(t)];
-	unsigned char command = e.getCommand();
+	unsigned char command = 0x90;
 	unsigned char finger = e.getData();
 	unsigned char payload = 0;
 

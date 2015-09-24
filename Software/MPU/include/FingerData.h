@@ -43,15 +43,10 @@
 class FingerEvent
 {
 private:
-	int eventLength;
-	std::vector<char> data;
+	char data;
 public:
-	void push(char d);
-	char getCommand(void);
+	void setData(char d);
 	char getData(void);
-	char operator[](int i);
-	bool isNoteOn(void);
-	bool isNoteOff(void);
 	bool isCheckpoint(void);
 };
 
@@ -59,14 +54,11 @@ class FingerTrack
 {
 private:
 	int trackLength;
-	int eventLength = 0;
 	std::vector<FingerEvent> events;
 public:
 	void setTrackLength(char *p);
 	int getTrackLength(void);
 	void push(FingerEvent event);
-	void incEventLength(void);
-	int getEventLength(void);
 	FingerEvent operator[](int i);
 };
 
@@ -82,6 +74,7 @@ public:
 	FingerData(std::string filepath);
 	int getTrackCount(void);
 	FingerTrack operator[](int i);
+	char getData(int t, int e);
 	void printAllEvents(void);
 };
 

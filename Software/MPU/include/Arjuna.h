@@ -52,7 +52,15 @@
 #define		RIGHT_HAND_MODE_BUTTON	'0'
 #define 	LEFT_HAND_MODE_BUTTON 	'#'
 
+struct Key
+{
+	int track;
+	unsigned char note;
+	unsigned char finger;
+};
+
 enum PlayMode {BOTH_HANDS, LEFT_HAND, RIGHT_HAND};
+enum MPUOperation {PLAYER, EVALUATOR};
 
 /**
  * Main Function
@@ -109,6 +117,17 @@ void printSongList(std::ifstream *songList);
  */
 std::string selectSong(Container *container, std::ifstream *songList);
 
+/* Start MIDI Processing Algorithm
+ *
+ * This function is a bootstrap for the MIDI Processing Algorithm.
+ * It will call the player or the evaluator, depending on user selection
+ * 
+ * @param container hadrware handler
+ * @param songPath  selected song path
+ * @param mode      MPA operation mode
+ */
+void startMPA(Container *container, std::string songPath, MPUOperation operation);
+
 /**
  * Song Player
  *
@@ -116,19 +135,74 @@ std::string selectSong(Container *container, std::ifstream *songList);
  * calculate some numbers, and send MIDI message to output port
  * 
  * @param  container hardware handler
- * @param  songPath  MIDI song location
+ * @param  midi 	 MIDI file handler
+ * @param  finger 	 finger data handler
+ * @param  mode 	 selected play mode
  */
-void songPlayer(Container *container, std::string songPath);
+void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode);
+
+/**
+ * Song Evaluator
+ *
+ * This function is used to compare MIDI input with MIDI data and give
+ * response to hands odule
+ * @param container handware handler
+ * @param midi      MIDI file handler
+ * @param finger    finger data handler
+ * @param mode      selected play mode
+ */
+void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode);
+
+/**
+ * Get Unison Note
+ *
+ * This function groups note played at the same time
+ * 
+ * @param  midi MIDI file handler
+ * @param  m    MIDI file index
+ * @param  t    MIDI track number
+ * @param  keys Keys container
+ * @return      status
+ */
+bool getUnisonNote(MidiFile *midi, int *m, int t, std::vector<Key> *keys);
+
+/**
+ * Get Unison Finger
+ * This function groups finger played at the same time
+ * 
+ * @param finger finger data handler
+ * @param f      finger data index
+ * @param keys   Keys container
+ */
+void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> *keys);
+
+/**
+ * Get MIDI Input
+ * 
+ * @param io       MIDI IO handler
+ * @param expected number of expected input
+ * @param messages MIDI messages container
+ */
+void getInputAndEvaluate(MidiIO *io, std::vector<Key> keys);
+
+/**
+ * Compare MIDI Input with MIDI Data
+ * 
+ * @param  keys MIDI Data
+ * @param  note MIDI Input
+ * @return      Compare result
+ */
+bool compare(std::vector<Key> *keys, unsigned char note);
 
 /**
  * Get Play Mode
  *
  * This function ask the user to select the play mode
  * 
- * @param  container hardware handler
- * @return           play mode
+ * @param  keypad 	keypad handler
+ * @return          play mode
  */
-PlayMode getPlayMode(Container *container);
+PlayMode getPlayMode(WiringPiKeypad *keypad);
 
 /**
  * Set Play Mode
@@ -158,15 +232,6 @@ void getTempoSPT(MidiEvent e, int tpq, double *spt);
  * @param e  MIDI event
  */
 void sendMidiMessage(MidiIO *io, MidiEvent e);
-
-/**
- * Skip Finger Metadata
- * 
- * @param finger finger data
- * @param i      finger index
- * @param t      active track
- */
-void skipFingerMetadata(FingerData finger, std::vector<int> *i, int t);
 
 /**
  * Send Feedback to Hand Module
