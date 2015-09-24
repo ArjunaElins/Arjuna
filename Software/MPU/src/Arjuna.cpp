@@ -87,7 +87,7 @@ void startRoutine(Container *container)
 		}
 		else if (keypress == EVALUATOR_BUTTON)
 		{
-			
+			startMPA(container, songPath, EVALUATOR);
 		}
 		else if (keypress == STOP_BUTTON)
 		{
@@ -215,6 +215,11 @@ void startMPA(Container *container, std::string songPath, MPUOperation operation
 		std::cout << "Playing song \"" + songPath + "\"..." << std::endl;
 		play(container, &midi, &finger, mode);
 	}
+	else
+	{
+		std::cout << "Evaluating song \"" + songPath + "\"..." << std::endl;
+		evaluate(container, &midi, &finger, mode);
+	}
 }
 
 /**
@@ -244,7 +249,64 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 
 		// Send Feedback
 	}
+}
 
+/**
+ * Song Evaluator
+ *
+ * This function is used to compare MIDI input with MIDI data and give
+ * response to hands odule
+ * @param container handware handler
+ * @param midi      MIDI file handler
+ * @param finger    finger data handler
+ * @param mode      selected play mode
+ */
+void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode)
+{
+	int t = (mode == LEFT_HAND) ? 1 : 0;
+	std::vector<char> iFinger(2, 0);
+
+	int m = 0;
+	bool status = true;
+	while (status)
+	{
+		std::vector<Key> keys;
+		status = getUnisonNote(midi, &m, t, &keys);
+	}
+}
+
+/**
+ * Get Unison Note
+ *
+ * This function groups note played at the same time
+ * 
+ * @param  midi MIDI file handler
+ * @param  m    MIDI file index
+ * @param  t    MIDI track number
+ * @param  keys Keys container
+ * @return      status
+ */
+bool getUnisonNote(MidiFile *midi, int *m, int t, std::vector<Key> *keys)
+{
+	bool status = true;
+	do
+	{
+		Key key;
+
+		if (midi->getEvent(t, *m).isNoteOn())
+		{
+			key.track = midi->getSplitTrack(t, *m);
+			key.note = midi->getEvent(t, *m)[1];
+			keys->push_back(key);
+		}
+		*m += 1;
+
+		if (*m < (*midi)[0].size())
+			status = false;
+
+	} while (midi->getEvent(t, *m).tick == 0);
+
+	return status;
 }
 
 /**

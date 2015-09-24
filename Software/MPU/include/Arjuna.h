@@ -142,6 +142,30 @@ void startMPA(Container *container, std::string songPath, MPUOperation operation
 void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode);
 
 /**
+ * Song Evaluator
+ *
+ * This function is used to compare MIDI input with MIDI data and give
+ * response to hands odule
+ * @param container handware handler
+ * @param midi      MIDI file handler
+ * @param finger    finger data handler
+ * @param mode      selected play mode
+ */
+void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode);
+
+/**
+ * Get Unison Note
+ *
+ * This function groups note played at the same time
+ * 
+ * @param  midi MIDI file handler
+ * @param  m    MIDI file index
+ * @param  t    MIDI track number
+ * @param  keys Keys container
+ * @return      status
+ */
+bool getUnisonNote(MidiFile *midi, int *m, int t, std::vector<Key> *keys);
+/**
  * Get Play Mode
  *
  * This function ask the user to select the play mode
