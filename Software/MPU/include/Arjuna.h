@@ -117,15 +117,39 @@ void printSongList(std::ifstream *songList);
  */
 std::string selectSong(Container *container, std::ifstream *songList);
 
+/* Start MIDI Processing Algorithm
+ *
+ * This function is a bootstrap for the MIDI Processing Algorithm.
+ * It will call the player or the evaluator, depending on user selection
+ * 
+ * @param container hadrware handler
+ * @param songPath  selected song path
+ * @param mode      MPA operation mode
+ */
+void startMPA(Container *container, std::string songPath, MPUOperation operation);
+
+/**
+ * Song Player
+ *
+ * This method is used to play MIDI song. It will open the MIDI file,
+ * calculate some numbers, and send MIDI message to output port
+ * 
+ * @param  container hardware handler
+ * @param  midi 	 MIDI file handler
+ * @param  finger 	 finger data handler
+ * @param  mode 	 selected play mode
+ */
+void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode);
+
 /**
  * Get Play Mode
  *
  * This function ask the user to select the play mode
  * 
- * @param  container hardware handler
- * @return           play mode
+ * @param  keypad 	keypad handler
+ * @return          play mode
  */
-PlayMode getPlayMode(Container *container);
+PlayMode getPlayMode(WiringPiKeypad *keypad);
 
 /**
  * Set Play Mode

@@ -83,7 +83,7 @@ void startRoutine(Container *container)
 		}
 		else if (keypress == PLAY_SONG_BUTTON)
 		{
-
+			startMPA(container, songPath, PLAYER);
 		}
 		else if (keypress == EVALUATOR_BUTTON)
 		{
@@ -193,15 +193,69 @@ std::string selectSong(Container *container, std::ifstream *songList)
 	return song;
 }
 
+/* Start MIDI Processing Algorithm
+ *
+ * This function is a bootstrap for the MIDI Processing Algorithm.
+ * It will call the player or the evaluator, depending on user selection
+ * 
+ * @param container hadrware handler
+ * @param songPath  selected song path
+ * @param mode      MPA operation mode
+ */
+void startMPA(Container *container, std::string songPath, MPUOperation operation)
+{
+	MidiFile midi(songPath + ".mid");
+	FingerData finger(songPath + ".fgr");
+
+	PlayMode mode = getPlayMode(container->keypad);
+	setPlayMode(&midi, mode);
+
+	if (operation == PLAYER)
+	{
+		std::cout << "Playing song \"" + songPath + "\"..." << std::endl;
+		play(container, &midi, &finger, mode);
+	}
+}
+
+/**
+ * Song Player
+ *
+ * This method is used to play MIDI song. It will open the MIDI file,
+ * calculate some numbers, and send MIDI message to output port
+ * 
+ * @param  container hardware handler
+ * @param  midi 	 MIDI file handler
+ * @param  finger 	 finger data handler
+ * @param  mode 	 selected play mode
+ */
+void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mode)
+{
+	int tpq = midi->getTicksPerQuarterNote();
+	double spt = 0.5 / tpq;
+	int t = (mode == LEFT_HAND) ? 1 : 0;
+
+	delay(500);
+	for (int e = 0; e < (*midi)[t].getSize(); e++)
+	{
+		delayMicroseconds(spt * midi->getEvent(t, e).tick * 1000000);
+		if (midi->getEvent(t, e).isMeta())
+			continue;
+		sendMidiMessage(container->io, midi->getEvent(t, e));
+
+		// Send Feedback
+	}
+
+}
+
 /**
  * Get Play Mode
  *
  * This function ask the user to select the play mode
  * 
- * @param  container hardware handler
- * @return           play mode
+ * @param  keypad 	keypad handler
+ * @return          play mode
  */
-PlayMode getPlayMode(Container *container)
+PlayMode getPlayMode(WiringPiKeypad *keypad)
 {
 	std::cout << "Select Play Mode." << std::endl
 			  << " A - Both hands" << std::endl
@@ -211,7 +265,7 @@ PlayMode getPlayMode(Container *container)
 	char keypress;
 	PlayMode mode = BOTH_HANDS;
 
-	keypress = container->keypad->getKey();
+	keypress = keypad->getKey();
 
 	if (keypress == BOTH_HANDS_MODE_BUTTON)
 		mode = BOTH_HANDS;
@@ -233,6 +287,8 @@ PlayMode getPlayMode(Container *container)
  */
 void setPlayMode(MidiFile *midi, PlayMode mode)
 {
+	midi->deltaTicks();
+
 	if (mode == BOTH_HANDS)
 		midi->joinTracks();
 }
