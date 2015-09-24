@@ -271,39 +271,9 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 	while (status)
 	{
 		std::vector<Key> keys;
-		std::vector<std::vector<unsigned char>> messages;
-
 		status = getUnisonNote(midi, &m, t, &keys);
 		getUnisonFinger(finger, &f, &keys);
-		getInput(container->io, keys.size(), &messages);
-	}
-}
-
-/**
- * Get MIDI Input
- * 
- * @param io       MIDI IO handler
- * @param expected number of expected input
- * @param messages MIDI messages container
- */
-void getInput(MidiIO *io, unsigned int expected, std::vector<std::vector<unsigned char>> *messages)
-{
-	unsigned int i = 0;
-	while (i < expected)
-	{
-		std::vector<unsigned char> message;
-		io->getMessage(&message);
-
-		if (message.size() > 0)
-		{
- 			if (message[0] == 0x90)
-			{
-				messages->push_back(message);
-				i++;
-			}
-		}
-
-		delay(10);
+		getInputAndEvaluate(container->io, keys);
 	}
 }
 
@@ -336,7 +306,8 @@ bool getUnisonNote(MidiFile *midi, int *m, int t, std::vector<Key> *keys)
 		if (*m >= (*midi)[0].size())
 			status = false;
 
-	} while (midi->getEvent(t, *m).tick == 0);
+	} while (midi->getEvent(t, *m).tick == 0 && status);
+
 	return status;
 }
 
@@ -356,6 +327,69 @@ void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> 
 		keys->at(i).finger = finger->getData(t, f->at(t));
 		f->at(t) += 1;
 	}
+}
+
+/**
+ * Get MIDI Input
+ * 
+ * @param io       MIDI IO handler
+ * @param expected number of expected input
+ * @param messages MIDI messages container
+ */
+void getInputAndEvaluate(MidiIO *io, std::vector<Key> keys)
+{
+	unsigned int i = 0;
+
+	while (i < keys.size())
+	{
+		std::vector<unsigned char> message;
+		io->getMessage(&message);
+
+		if (message.size() > 0)
+		{
+ 			if (message[0] == 0x90)
+			{
+				if (! compare(&keys, message[1]))
+				{
+					printf("Wrong.\nExpected: ");
+					for (unsigned int i = 0; i < keys.size(); i++)
+						printf("%X ", keys[i].note);
+					
+					printf("\nReceived: %X\n", message[1]);
+				}
+			}
+		}
+
+		delay(10);
+	}
+}
+
+/**
+ * Compare MIDI Input with MIDI Data
+ * 
+ * @param  keys MIDI Data
+ * @param  note MIDI Input
+ * @return      Compare result
+ */
+bool compare(std::vector<Key> *keys, unsigned char note)
+{
+	bool wrong = true;
+
+	for (unsigned int i = 0; i < keys->size(); i++)
+	{
+		if (keys->at(i).note != note)
+		{
+			wrong = true;			
+		}
+		else
+		{
+			wrong = false;
+			keys->erase(keys->begin() + i);
+			break;
+		}
+	}
+
+	return !wrong;
 }
 
 /**
