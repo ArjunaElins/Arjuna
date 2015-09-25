@@ -181,18 +181,18 @@ void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> 
  * 
  * @param io       MIDI IO handler
  * @param expected number of expected input
- * @param messages MIDI messages container
  */
-void getInputAndEvaluate(MidiIO *io, std::vector<Key> keys);
+void getInputAndEvaluate(Container *container, std::vector<Key> keys);
 
 /**
  * Compare MIDI Input with MIDI Data
- * 
+ *
+ * @param  rf 	Trasceiver handler
  * @param  keys MIDI Data
  * @param  note MIDI Input
  * @return      Compare result
  */
-bool compare(std::vector<Key> *keys, unsigned char note);
+bool compare(ORF24 *rf, std::vector<Key> *keys, unsigned char note);
 
 /**
  * Get Play Mode
