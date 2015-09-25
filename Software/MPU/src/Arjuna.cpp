@@ -238,6 +238,7 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 	int tpq = midi->getTicksPerQuarterNote();
 	double spt = 0.5 / tpq;
 	int t = (mode == LEFT_HAND) ? 1 : 0;
+	std::vector<char> f(2, 0);
 
 	delay(500);
 	for (int e = 0; e < (*midi)[t].getSize(); e++)
@@ -246,8 +247,12 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 		if (midi->getEvent(t, e).isMeta())
 			continue;
 		sendMidiMessage(container->io, midi->getEvent(t, e));
-
-		// Send Feedback
+ 
+ 		if (midi->getEvent(t, e).isNoteOn())
+ 		{
+	 		int ft = (mode == BOTH_HANDS) ? midi->getSplitTrack(t, e) : t;
+			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft);
+ 		}
 	}
 }
 
@@ -273,7 +278,7 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 		std::vector<Key> keys;
 		status = getUnisonNote(midi, &m, t, &keys);
 		getUnisonFinger(finger, &f, &keys);
-		getInputAndEvaluate(container->io, keys);
+		getInputAndEvaluate(container, keys);
 	}
 }
 
@@ -334,22 +339,21 @@ void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> 
  * 
  * @param io       MIDI IO handler
  * @param expected number of expected input
- * @param messages MIDI messages container
  */
-void getInputAndEvaluate(MidiIO *io, std::vector<Key> keys)
+void getInputAndEvaluate(Container *container, std::vector<Key> keys)
 {
 	unsigned int i = 0;
 
 	while (i < keys.size())
 	{
 		std::vector<unsigned char> message;
-		io->getMessage(&message);
+		container->io->getMessage(&message);
 
 		if (message.size() > 0)
 		{
  			if (message[0] == 0x90)
 			{
-				if (! compare(&keys, message[1]))
+				if (! compare(container->rf, &keys, message[1]))
 				{
 					printf("Wrong.\nExpected: ");
 					for (unsigned int i = 0; i < keys.size(); i++)
@@ -366,12 +370,13 @@ void getInputAndEvaluate(MidiIO *io, std::vector<Key> keys)
 
 /**
  * Compare MIDI Input with MIDI Data
- * 
+ *
+ * @param  rf 	Trasceiver handler
  * @param  keys MIDI Data
  * @param  note MIDI Input
  * @return      Compare result
  */
-bool compare(std::vector<Key> *keys, unsigned char note)
+bool compare(ORF24 *rf, std::vector<Key> *keys, unsigned char note)
 {
 	bool wrong = true;
 
@@ -379,7 +384,8 @@ bool compare(std::vector<Key> *keys, unsigned char note)
 	{
 		if (keys->at(i).note != note)
 		{
-			wrong = true;			
+			wrong = true;
+			sendFeedback(rf, keys->at(i).finger, keys->at(i).track);			
 		}
 		else
 		{
@@ -476,14 +482,11 @@ void sendMidiMessage(MidiIO *io, MidiEvent e)
  * 
  * @param rf radio handler
  * @param f  finger data
- * @param i  finger index
  * @param t  active track
  */
-void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t)
+void sendFeedback(ORF24 *rf, char f, int t)
 {
-	FingerEvent e = f[t][i->at(t)];
-	unsigned char command = 0x90;
-	unsigned char finger = e.getData();
+	const unsigned char command = 0x90;
 	unsigned char payload = 0;
 
 	if (t) // Left hand
@@ -492,17 +495,13 @@ void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t)
 	}
 	else // Right hand
 	{
-		finger = inverse(finger);
+		f = inverse(f);
 		rf->openWritingPipe("ArS01");
 	}
+	printf("Feedback: %X %X\n", t, f);
 
-	if (command == 0x80 || command == 0x90)
-	{
-		payload = command | (finger - 1) * 2;
-		rf->write(&payload, 1);
-	}
-
-	i->at(t)++;
+	payload = command | (f - 1) * 2;
+	rf->write(&payload, 1);
 }
 
 /**
