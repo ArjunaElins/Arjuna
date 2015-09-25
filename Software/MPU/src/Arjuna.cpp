@@ -238,6 +238,7 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 	int tpq = midi->getTicksPerQuarterNote();
 	double spt = 0.5 / tpq;
 	int t = (mode == LEFT_HAND) ? 1 : 0;
+	std::vector<char> f(2, 0);
 
 	delay(500);
 	for (int e = 0; e < (*midi)[t].getSize(); e++)
@@ -246,8 +247,12 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 		if (midi->getEvent(t, e).isMeta())
 			continue;
 		sendMidiMessage(container->io, midi->getEvent(t, e));
-
-		// Send Feedback
+ 
+ 		if (midi->getEvent(t, e).isNoteOn())
+ 		{
+	 		int ft = (mode == BOTH_HANDS) ? midi->getSplitTrack(t, e) : t;
+			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft);
+ 		}
 	}
 }
 
@@ -476,14 +481,11 @@ void sendMidiMessage(MidiIO *io, MidiEvent e)
  * 
  * @param rf radio handler
  * @param f  finger data
- * @param i  finger index
  * @param t  active track
  */
-void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t)
+void sendFeedback(ORF24 *rf, char f, int t)
 {
-	FingerEvent e = f[t][i->at(t)];
-	unsigned char command = 0x90;
-	unsigned char finger = e.getData();
+	const unsigned char command = 0x90;
 	unsigned char payload = 0;
 
 	if (t) // Left hand
@@ -492,17 +494,12 @@ void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t)
 	}
 	else // Right hand
 	{
-		finger = inverse(finger);
+		f = inverse(f);
 		rf->openWritingPipe("ArS01");
 	}
 
-	if (command == 0x80 || command == 0x90)
-	{
-		payload = command | (finger - 1) * 2;
-		rf->write(&payload, 1);
-	}
-
-	i->at(t)++;
+	payload = command | (f - 1) * 2;
+	rf->write(&payload, 1);
 }
 
 /**

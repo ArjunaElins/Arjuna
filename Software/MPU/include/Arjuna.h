@@ -240,10 +240,9 @@ void sendMidiMessage(MidiIO *io, MidiEvent e);
  * 
  * @param rf radio handler
  * @param f  finger data
- * @param i  finger index
  * @param t  active track
  */
-void sendFeedback(ORF24 *rf, FingerData f, std::vector<int> *i, int t);
+void sendFeedback(ORF24 *rf, char f, int t);
 
 /**
  * Inverse Finger Number
