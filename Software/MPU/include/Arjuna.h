@@ -43,14 +43,14 @@
 #include "MidiFile.h"
 #include "FingerData.h"
 
-#define 	SELECT_SONG_BUTTON	'*'
-#define		PLAY_SONG_BUTTON	'0'
-#define		EVALUATOR_BUTTON	'#'
-#define 	STOP_BUTTON			'7'
+#define 	SELECT_SONG_BUTTON	'A'
+#define		PLAY_SONG_BUTTON	'B'
+#define		EVALUATOR_BUTTON	'C'
+#define 	STOP_BUTTON			'D'
 
-#define		BOTH_HANDS_MODE_BUTTON	'*'
-#define		RIGHT_HAND_MODE_BUTTON	'0'
-#define 	LEFT_HAND_MODE_BUTTON 	'#'
+#define		BOTH_HANDS_MODE_BUTTON	'A'
+#define		RIGHT_HAND_MODE_BUTTON	'B'
+#define 	LEFT_HAND_MODE_BUTTON 	'C'
 
 struct Key
 {
