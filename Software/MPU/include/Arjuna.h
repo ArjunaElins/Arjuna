@@ -238,11 +238,12 @@ void sendMidiMessage(MidiIO *io, MidiEvent e);
  *
  * This method use the radio transceiver to send payload to hand module
  * 
- * @param rf radio handler
- * @param f  finger data
- * @param t  active track
+ * @param rf 		radio handler
+ * @param f  		finger data
+ * @param t  		active track
+ * @param right 	turn on right vibrator. If false, then turn on left vibrator
  */
-void sendFeedback(ORF24 *rf, char f, int t);
+void sendFeedback(ORF24 *rf, char f, int t, bool right);
 
 /**
  * Inverse Finger Number

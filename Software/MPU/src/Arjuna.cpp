@@ -251,7 +251,7 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
  		if (midi->getEvent(t, e).isNoteOn())
  		{
 	 		int ft = (mode == BOTH_HANDS) ? midi->getSplitTrack(t, e) : t;
-			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft);
+			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft, true);
  		}
 	}
 }
@@ -379,13 +379,15 @@ void getInputAndEvaluate(Container *container, std::vector<Key> keys)
 bool compare(ORF24 *rf, std::vector<Key> *keys, unsigned char note)
 {
 	bool wrong = true;
+	bool right = true;
 
 	for (unsigned int i = 0; i < keys->size(); i++)
 	{
 		if (keys->at(i).note != note)
 		{
 			wrong = true;
-			sendFeedback(rf, keys->at(i).finger, keys->at(i).track);			
+			right = (note > keys->at(i).note) ? true : false;  
+			sendFeedback(rf, keys->at(i).finger, keys->at(i).track, right);			
 		}
 		else
 		{
@@ -480,11 +482,12 @@ void sendMidiMessage(MidiIO *io, MidiEvent e)
  *
  * This method use the radio transceiver to send payload to hand module
  * 
- * @param rf radio handler
- * @param f  finger data
- * @param t  active track
+ * @param rf 		radio handler
+ * @param f  		finger data
+ * @param t  		active track
+ * @param right 	turn on right vibrator. If false, then turn on left vibrator
  */
-void sendFeedback(ORF24 *rf, char f, int t)
+void sendFeedback(ORF24 *rf, char f, int t, bool right)
 {
 	const unsigned char command = 0x90;
 	unsigned char payload = 0;
@@ -500,7 +503,11 @@ void sendFeedback(ORF24 *rf, char f, int t)
 	}
 	printf("Feedback: %X %X\n", t, f);
 
-	payload = command | (f - 1) * 2;
+	if (right)
+		payload = command | (f * 2 - 1);
+	else
+		payload = command | (f * 2 - 2);
+
 	rf->write(&payload, 1);
 }
 
