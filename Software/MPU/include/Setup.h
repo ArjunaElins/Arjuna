@@ -31,51 +31,73 @@
  * 
  */
 
-#ifndef _FINGER_DATA_H
-#define _FINGER_DATA_H
+#ifndef _SETUP_H_
+#define _SETUP_H_
 
 #include <iostream>
-#include <fstream>
-#include <list>
-#include <vector>
-#include <cstdio>
+#include <tclap/CmdLine.h>
+#include <wiringPi.h>
 
-class FingerEvent
-{
-private:
-	char data;
-public:
-	void setData(char d);
-	char getData(void);
-	bool isCheckpoint(void);
+#include "MidiIO.h"
+#include "ORF24.h"
+#include "WiringPiKeypad.h"
+
+/**
+ * A structure to contain command line arguments
+ */
+struct Args {
+	bool debugEnabled;
+	bool keyboardEnabled;
 };
 
-class FingerTrack
-{
-private:
-	int trackLength;
-	std::vector<FingerEvent> events;
-public:
-	void setTrackLength(char *p);
-	int getTrackLength(void);
-	void push(FingerEvent event);
-	FingerEvent operator[](int i);
+/**
+ * Container is a struct to contain hardware handler
+ */
+struct Container {
+	MidiIO *io;
+	ORF24 *rf;
+	WiringPiKeypad *keypad;
 };
 
-class FingerData
-{
-private:
-	int trackCount;
-	std::vector<FingerTrack> tracks;
-	char *open(std::string filepath);
-	void parse(char *buffer);
+/**
+ * Get Command Line Arguments
+ *
+ * This function uses TCLAP library to parse command line arguments
+ * 
+ * @param  argc arguments count
+ * @param  argv arguments vector
+ * @return      parsed arguments
+ */
+struct Args getArgs(int argc, char *argv[]);
 
-public:
-	FingerData(std::string filepath);
-	int getTrackCount(void);
-	FingerTrack operator[](int i);
-	char getData(int t, int e);
-	void printAllEvents(void);
-};
+/**
+ * Initial Hardware Setup
+ *
+ * This function initialize the device to interface with hardware.
+ * 
+ * @return setup status
+ */
+int initHardware(struct Container *container, struct Args *args);
+
+/**
+ * Setup MIDI Input/Output
+ * 
+ * @return  status
+ */
+int midiIOSetup(struct Container *container, struct Args *args);
+
+/**
+ * Setup nRf24L01+ Radio Transceiver
+ * 
+ * @return  status
+ */
+int radioSetup(struct Container *container, struct Args *args);
+
+/**
+ * Setup keypad matrix
+ * 
+ * @return  status
+ */
+int keypadSetup(struct Container *container, struct Args *args);
 
 #endif
