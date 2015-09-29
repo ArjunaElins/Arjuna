@@ -240,13 +240,17 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 	int t = (mode == LEFT_HAND) ? 1 : 0;
 	std::vector<char> f(2, 0);
 
+	std::cout << "Enter Tempo Modifier: " << std::endl;
+	int tempo = container->keypad->getKey() - '0';
+	tempo = tempo > 2 ? 1 : tempo;
+	
 	if (container->io->openMidiOutPort())
 		return;
 
 	delay(500);
 	for (int e = 0; e < (*midi)[t].getSize(); e++)
 	{
-		delayMicroseconds(spt * midi->getEvent(t, e).tick * 1000000);
+		delayMicroseconds(spt * midi->getEvent(t, e).tick * 1000000 * tempo);
 		if (midi->getEvent(t, e).isMeta())
 			continue;
 		sendMidiMessage(container->io, midi->getEvent(t, e));
