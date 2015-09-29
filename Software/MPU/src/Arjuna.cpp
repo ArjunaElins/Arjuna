@@ -251,7 +251,8 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
  		if (midi->getEvent(t, e).isNoteOn())
  		{
 	 		int ft = (mode == BOTH_HANDS) ? midi->getSplitTrack(t, e) : t;
-			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft, true);
+			sendFeedback(container->rf, finger->getData(ft, f[ft]), ft, true);
+			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft, false);
  		}
 	}
 }
