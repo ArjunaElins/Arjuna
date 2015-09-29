@@ -213,12 +213,20 @@ void startMPA(Container *container, std::string songPath, MPUOperation operation
 	if (operation == PLAYER)
 	{
 		std::cout << "Playing song \"" + songPath + "\"..." << std::endl;
+		if (container->io->openMidiOutPort())
+			return;
+
 		play(container, &midi, &finger, mode);
+		container->io->closeMidiOutPort();
 	}
 	else
 	{
 		std::cout << "Evaluating song \"" + songPath + "\"..." << std::endl;
+		if (container->io->openMidiInPort())
+			return;
+
 		evaluate(container, &midi, &finger, mode);
+		container->io->closeMidiInPort();
 	}
 }
 
@@ -247,11 +255,8 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 	char keypress;
 	bool terminator = true;
 	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
-	
-	if (container->io->openMidiOutPort())
-		return;
 
-	delay(500);
+	delay(1000);
 	for (int e = 0; e < (*midi)[t].getSize(); e++)
 	{
 		delayMicroseconds(spt * midi->getEvent(t, e).tick * 1000000 * tempo);
@@ -275,7 +280,6 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
  		}
 	}
 
-	container->io->closeMidiOutPort();
 	terminator = false;
 	input.join();
 }
@@ -301,9 +305,6 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 	bool terminator = true;
 	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
 
-	if (container->io->openMidiInPort())
-		return;
-
 	while (status)
 	{
 		std::vector<Key> keys;
@@ -320,7 +321,6 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
  		}
 	}
 
-	container->io->closeMidiInPort();
 	terminator = false;
 	input.join();
 }
@@ -544,7 +544,7 @@ void sendFeedback(ORF24 *rf, char f, int t, bool right)
 		f = inverse(f);
 		rf->openWritingPipe("ArS01");
 	}
-	printf("Feedback: %X %X\n", t, f);
+	// printf("Feedback: %X %X\n", t, f);
 
 	if (right)
 		payload = command | (f * 2 - 1);
