@@ -182,7 +182,7 @@ void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> 
  * @param io       MIDI IO handler
  * @param expected number of expected input
  */
-void getInputAndEvaluate(Container *container, std::vector<Key> keys);
+void getInputAndEvaluate(Container *container, std::vector<Key> keys, char *keypress, MidiFile *midi, int m, int t);
 
 /**
  * Compare MIDI Input with MIDI Data
