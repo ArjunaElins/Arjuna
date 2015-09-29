@@ -110,18 +110,6 @@ int midiIOSetup(struct Container *container, struct Args *args)
 	MidiIO *io = container->io;
 
 	io->enableDebug(args->debugEnabled);
-	
-	if (io->openMidiOutPort())
-	{
-		std::cout << "Error in opening MIDI output port." << std::endl;
-		return -1;
-	}
-
-	if (io->openMidiInPort())
-	{
-		std::cout << "Error in opening MIDI input port." << std::endl;
-		return -1;
-	}
 
 	return 0;
 }

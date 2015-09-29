@@ -240,10 +240,17 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 	int t = (mode == LEFT_HAND) ? 1 : 0;
 	std::vector<char> f(2, 0);
 
+	std::cout << "Enter Tempo Modifier: " << std::endl;
+	int tempo = container->keypad->getKey() - '0';
+	tempo = tempo > 2 ? 1 : tempo;
+	
+	if (container->io->openMidiOutPort())
+		return;
+
 	delay(500);
 	for (int e = 0; e < (*midi)[t].getSize(); e++)
 	{
-		delayMicroseconds(spt * midi->getEvent(t, e).tick * 1000000);
+		delayMicroseconds(spt * midi->getEvent(t, e).tick * 1000000 * tempo);
 		if (midi->getEvent(t, e).isMeta())
 			continue;
 		sendMidiMessage(container->io, midi->getEvent(t, e));
@@ -251,9 +258,12 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
  		if (midi->getEvent(t, e).isNoteOn())
  		{
 	 		int ft = (mode == BOTH_HANDS) ? midi->getSplitTrack(t, e) : t;
-			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft, true);
+			sendFeedback(container->rf, finger->getData(ft, f[ft]), ft, true);
+			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft, false);
  		}
 	}
+
+	container->io->closeMidiOutPort();
 }
 
 /**
@@ -273,6 +283,9 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 	std::vector<char> f(2, 0);
 	bool status = true;
 
+	if (container->io->openMidiInPort())
+		return;
+
 	while (status)
 	{
 		std::vector<Key> keys;
@@ -280,6 +293,8 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 		getUnisonFinger(finger, &f, &keys);
 		getInputAndEvaluate(container, keys);
 	}
+
+	container->io->closeMidiInPort();
 }
 
 /**
@@ -411,9 +426,9 @@ bool compare(ORF24 *rf, std::vector<Key> *keys, unsigned char note)
 PlayMode getPlayMode(WiringPiKeypad *keypad)
 {
 	std::cout << "Select Play Mode." << std::endl
-			  << " A - Both hands" << std::endl
-			  << " B - Right hands" << std::endl
-			  << " C - Left hands" << std::endl;
+			  << " 1 - Both hands" << std::endl
+			  << " 2 - Right hands" << std::endl
+			  << " 3 - Left hands" << std::endl;
 
 	char keypress;
 	PlayMode mode = BOTH_HANDS;
