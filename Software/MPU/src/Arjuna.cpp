@@ -243,6 +243,10 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 	std::cout << "Enter Tempo Modifier: " << std::endl;
 	int tempo = container->keypad->getKey() - '0';
 	tempo = tempo > 2 ? 1 : tempo;
+
+	char keypress;
+	bool terminator = true;
+	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
 	
 	if (container->io->openMidiOutPort())
 		return;
@@ -261,9 +265,19 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 			sendFeedback(container->rf, finger->getData(ft, f[ft]), ft, true);
 			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft, false);
  		}
+
+ 		switch (keypress)
+ 		{
+ 			case 'D':
+ 				keypress = 0;
+ 				input.join();
+ 				return;
+ 		}
 	}
 
 	container->io->closeMidiOutPort();
+	terminator = false;
+	input.join();
 }
 
 /**
@@ -567,7 +581,7 @@ void keypadHandler(WiringPiKeypad *keypad, char *keypress, bool *terminator)
 	{
 		*keypress = keypad->getKey(terminator);
 
-		if (*keypress == STOP_BUTTON)
+		if (*keypress == STOP_BUTTON || !(*terminator))
 		{
 			break;
 		}

@@ -153,7 +153,7 @@ struct key WiringPiKeypad::getRawKey(bool *terminator)
 		pullUpDnControl(rowPin[i], PUD_OFF);
 	}
 
-	while (terminator)
+	while (*terminator)
 	{
 		for (int i = 0; i < rowSize; i++)
 		{
