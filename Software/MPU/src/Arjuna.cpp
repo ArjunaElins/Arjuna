@@ -426,9 +426,9 @@ bool compare(ORF24 *rf, std::vector<Key> *keys, unsigned char note)
 PlayMode getPlayMode(WiringPiKeypad *keypad)
 {
 	std::cout << "Select Play Mode." << std::endl
-			  << " A - Both hands" << std::endl
-			  << " B - Right hands" << std::endl
-			  << " C - Left hands" << std::endl;
+			  << " 1 - Both hands" << std::endl
+			  << " 2 - Right hands" << std::endl
+			  << " 3 - Left hands" << std::endl;
 
 	char keypress;
 	PlayMode mode = BOTH_HANDS;

@@ -48,9 +48,9 @@
 #define		EVALUATOR_BUTTON	'C'
 #define 	STOP_BUTTON			'D'
 
-#define		BOTH_HANDS_MODE_BUTTON	'A'
-#define		RIGHT_HAND_MODE_BUTTON	'B'
-#define 	LEFT_HAND_MODE_BUTTON 	'C'
+#define		BOTH_HANDS_MODE_BUTTON	'1'
+#define		RIGHT_HAND_MODE_BUTTON	'2'
+#define 	LEFT_HAND_MODE_BUTTON 	'3'
 
 struct Key
 {
