@@ -222,11 +222,13 @@ void startMPA(Container *container, std::string songPath, MPUOperation operation
 	else
 	{
 		std::cout << "Evaluating song \"" + songPath + "\"..." << std::endl;
-		if (container->io->openMidiInPort())
-			return;
+		
+		if (container->io->openMidiInPort()) return;
+		if (container->io->openMidiOutPort()) return;
 
 		evaluate(container, &midi, &finger, mode);
 		container->io->closeMidiInPort();
+		container->io->closeMidiOutPort();
 	}
 }
 
@@ -308,9 +310,10 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 	while (status)
 	{
 		std::vector<Key> keys;
+		int mBefore = m;
 		status = getUnisonNote(midi, &m, t, &keys);
 		getUnisonFinger(finger, &f, &keys);
-		getInputAndEvaluate(container, keys, &keypress);
+		getInputAndEvaluate(container, keys, &keypress, midi, mBefore, t);
 
 		switch (keypress)
  		{
@@ -383,9 +386,10 @@ void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> 
  * @param io       MIDI IO handler
  * @param expected number of expected input
  */
-void getInputAndEvaluate(Container *container, std::vector<Key> keys, char *keypress)
+void getInputAndEvaluate(Container *container, std::vector<Key> keys, char *keypress, MidiFile *midi, int m, int t)
 {
 	unsigned int i = 0;
+	int cWrong = 0;
 
 	while (i < keys.size() && *keypress != STOP_BUTTON)
 	{
@@ -403,7 +407,26 @@ void getInputAndEvaluate(Container *container, std::vector<Key> keys, char *keyp
 						printf("%X ", keys[i].note);
 					
 					printf("\nReceived: %X\n", message[1]);
+					cWrong++;
 				}
+			}
+
+			if (cWrong > 2)
+			{
+				int lim = m + 4;
+				delay(300);
+				for (int e = m; e < lim; e++)
+				{
+					delayMicroseconds((0.5 / midi->getTicksPerQuarterNote()) * midi->getEvent(t, e).tick * 1000000);
+					
+					if (!midi->getEvent(t, e).isNoteOn())
+						lim++;
+					if (midi->getEvent(t, e).isMeta())
+						continue;
+
+					sendMidiMessage(container->io, midi->getEvent(t, e));
+				}
+				cWrong = 0;
 			}
 		}
 
