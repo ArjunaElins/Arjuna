@@ -283,7 +283,7 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 	std::vector<char> f(2, 0);
 	bool status = true;
 
-	if (container->io->openMidiOutPort() && container->io->openMidiInPort())
+	if (container->io->openMidiInPort())
 		return;
 
 	while (status)
@@ -294,7 +294,6 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 		getInputAndEvaluate(container, keys);
 	}
 
-	container->io->closeMidiOutPort();
 	container->io->closeMidiInPort();
 }
 
