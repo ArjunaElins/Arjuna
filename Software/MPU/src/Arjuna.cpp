@@ -268,7 +268,7 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 
  		switch (keypress)
  		{
- 			case 'D':
+ 			case STOP_BUTTON:
  				keypress = 0;
  				input.join();
  				return;
@@ -297,6 +297,10 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 	std::vector<char> f(2, 0);
 	bool status = true;
 
+	char keypress;
+	bool terminator = true;
+	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
+
 	if (container->io->openMidiInPort())
 		return;
 
@@ -305,10 +309,20 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 		std::vector<Key> keys;
 		status = getUnisonNote(midi, &m, t, &keys);
 		getUnisonFinger(finger, &f, &keys);
-		getInputAndEvaluate(container, keys);
+		getInputAndEvaluate(container, keys, &keypress);
+
+		switch (keypress)
+ 		{
+ 			case STOP_BUTTON:
+ 				keypress = 0;
+ 				input.join();
+ 				return;
+ 		}
 	}
 
 	container->io->closeMidiInPort();
+	terminator = false;
+	input.join();
 }
 
 /**
@@ -369,11 +383,11 @@ void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> 
  * @param io       MIDI IO handler
  * @param expected number of expected input
  */
-void getInputAndEvaluate(Container *container, std::vector<Key> keys)
+void getInputAndEvaluate(Container *container, std::vector<Key> keys, char *keypress)
 {
 	unsigned int i = 0;
 
-	while (i < keys.size())
+	while (i < keys.size() && *keypress != STOP_BUTTON)
 	{
 		std::vector<unsigned char> message;
 		container->io->getMessage(&message);
