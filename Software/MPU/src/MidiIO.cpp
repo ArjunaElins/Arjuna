@@ -129,6 +129,26 @@ int MidiIO::openMidiInPort(void)
 }
 
 /**
+ * Close MIDI Input Port
+ * 
+ * @return  status
+ */
+int MidiIO::closeMidiInPort(void)
+{
+	if (debug)
+		std::cout << "\n  Closing input port #" << inPort + 1 << ": "
+				  << in->getPortName(inPort) << "...\n";
+
+	if (in->isPortOpen())
+		in->closePort();
+	
+	std::cout << "\n  Input port #" << inPort + 1 << ": " << in->getPortName(inPort)
+			  << " is closed.\n";
+
+	return 0;
+}
+
+/**
  * Open MIDI output port
  * 
  * @return  	status
@@ -152,6 +172,26 @@ int MidiIO::openMidiOutPort(void)
 	if (debug)
 		std::cout << "  Output port #" << outPort + 1 << ": " << out->getPortName(outPort)
 				  << " is open.\n";
+
+	return 0;
+}
+
+/**
+ * Close MIDI output port
+ * 
+ * @return  status
+ */
+int MidiIO::closeMidiOutPort(void)
+{
+	if (debug)
+		std::cout << "\n  Closing output port #" << outPort + 1 << ": "
+				  << out->getPortName(outPort) << "...\n";
+
+	if (out->isPortOpen())
+		out->closePort();
+	
+	std::cout << "\n  Output port #" << outPort + 1 << ": " << out->getPortName(outPort)
+			  << " is closed.\n";
 
 	return 0;
 }

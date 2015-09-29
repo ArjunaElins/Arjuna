@@ -119,11 +119,25 @@ public:
 	int openMidiInPort(void);
 
 	/**
+	 * Close MIDI Input Port
+	 * 
+	 * @return  status
+	 */
+	int closeMidiInPort(void);
+
+	/**
 	 * Open MIDI Output Port
 	 * 
 	 * @return  status
 	 */
 	int openMidiOutPort(void);
+
+	/**
+	 * Close MIDI output port
+	 * 
+	 * @return  status
+	 */
+	int closeMidiOutPort(void);
 
 	/**
 	 * Send MIDI Message to Output Port

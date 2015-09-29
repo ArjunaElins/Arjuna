@@ -240,6 +240,9 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 	int t = (mode == LEFT_HAND) ? 1 : 0;
 	std::vector<char> f(2, 0);
 
+	if (container->io->openMidiOutPort())
+		return;
+
 	delay(500);
 	for (int e = 0; e < (*midi)[t].getSize(); e++)
 	{
@@ -255,6 +258,8 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft, false);
  		}
 	}
+
+	container->io->closeMidiOutPort();
 }
 
 /**
@@ -274,6 +279,9 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 	std::vector<char> f(2, 0);
 	bool status = true;
 
+	if (container->io->openMidiOutPort() && container->io->openMidiInPort())
+		return;
+
 	while (status)
 	{
 		std::vector<Key> keys;
@@ -281,6 +289,9 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 		getUnisonFinger(finger, &f, &keys);
 		getInputAndEvaluate(container, keys);
 	}
+
+	container->io->closeMidiOutPort();
+	container->io->closeMidiInPort();
 }
 
 /**
