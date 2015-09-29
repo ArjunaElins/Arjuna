@@ -213,12 +213,22 @@ void startMPA(Container *container, std::string songPath, MPUOperation operation
 	if (operation == PLAYER)
 	{
 		std::cout << "Playing song \"" + songPath + "\"..." << std::endl;
+		if (container->io->openMidiOutPort())
+			return;
+
 		play(container, &midi, &finger, mode);
+		container->io->closeMidiOutPort();
 	}
 	else
 	{
 		std::cout << "Evaluating song \"" + songPath + "\"..." << std::endl;
+		
+		if (container->io->openMidiInPort()) return;
+		if (container->io->openMidiOutPort()) return;
+
 		evaluate(container, &midi, &finger, mode);
+		container->io->closeMidiInPort();
+		container->io->closeMidiOutPort();
 	}
 }
 
@@ -243,11 +253,12 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 	std::cout << "Enter Tempo Modifier: " << std::endl;
 	int tempo = container->keypad->getKey() - '0';
 	tempo = tempo > 2 ? 1 : tempo;
-	
-	if (container->io->openMidiOutPort())
-		return;
 
-	delay(500);
+	char keypress;
+	bool terminator = true;
+	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
+
+	delay(1000);
 	for (int e = 0; e < (*midi)[t].getSize(); e++)
 	{
 		delayMicroseconds(spt * midi->getEvent(t, e).tick * 1000000 * tempo);
@@ -261,9 +272,18 @@ void play(Container *container, MidiFile *midi, FingerData *finger, PlayMode mod
 			sendFeedback(container->rf, finger->getData(ft, f[ft]), ft, true);
 			sendFeedback(container->rf, finger->getData(ft, f[ft]++), ft, false);
  		}
+
+ 		switch (keypress)
+ 		{
+ 			case STOP_BUTTON:
+ 				keypress = 0;
+ 				input.join();
+ 				return;
+ 		}
 	}
 
-	container->io->closeMidiOutPort();
+	terminator = false;
+	input.join();
 }
 
 /**
@@ -283,18 +303,29 @@ void evaluate(Container *container, MidiFile *midi, FingerData *finger, PlayMode
 	std::vector<char> f(2, 0);
 	bool status = true;
 
-	if (container->io->openMidiInPort())
-		return;
+	char keypress;
+	bool terminator = true;
+	std::thread input(keypadHandler, container->keypad, &keypress, &terminator);
 
 	while (status)
 	{
 		std::vector<Key> keys;
+		int mBefore = m;
 		status = getUnisonNote(midi, &m, t, &keys);
 		getUnisonFinger(finger, &f, &keys);
-		getInputAndEvaluate(container, keys);
+		getInputAndEvaluate(container, keys, &keypress, midi, mBefore, t);
+
+		switch (keypress)
+ 		{
+ 			case STOP_BUTTON:
+ 				keypress = 0;
+ 				input.join();
+ 				return;
+ 		}
 	}
 
-	container->io->closeMidiInPort();
+	terminator = false;
+	input.join();
 }
 
 /**
@@ -355,11 +386,12 @@ void getUnisonFinger(FingerData *finger, std::vector<char> *f, std::vector<Key> 
  * @param io       MIDI IO handler
  * @param expected number of expected input
  */
-void getInputAndEvaluate(Container *container, std::vector<Key> keys)
+void getInputAndEvaluate(Container *container, std::vector<Key> keys, char *keypress, MidiFile *midi, int m, int t)
 {
 	unsigned int i = 0;
+	int cWrong = 0;
 
-	while (i < keys.size())
+	while (i < keys.size() && *keypress != STOP_BUTTON)
 	{
 		std::vector<unsigned char> message;
 		container->io->getMessage(&message);
@@ -375,7 +407,26 @@ void getInputAndEvaluate(Container *container, std::vector<Key> keys)
 						printf("%X ", keys[i].note);
 					
 					printf("\nReceived: %X\n", message[1]);
+					cWrong++;
 				}
+			}
+
+			if (cWrong > 2)
+			{
+				int lim = m + 4;
+				delay(300);
+				for (int e = m; e < lim; e++)
+				{
+					delayMicroseconds((0.5 / midi->getTicksPerQuarterNote()) * midi->getEvent(t, e).tick * 1000000);
+					
+					if (!midi->getEvent(t, e).isNoteOn())
+						lim++;
+					if (midi->getEvent(t, e).isMeta())
+						continue;
+
+					sendMidiMessage(container->io, midi->getEvent(t, e));
+				}
+				cWrong = 0;
 			}
 		}
 
@@ -516,7 +567,7 @@ void sendFeedback(ORF24 *rf, char f, int t, bool right)
 		f = inverse(f);
 		rf->openWritingPipe("ArS01");
 	}
-	printf("Feedback: %X %X\n", t, f);
+	// printf("Feedback: %X %X\n", t, f);
 
 	if (right)
 		payload = command | (f * 2 - 1);
@@ -567,7 +618,7 @@ void keypadHandler(WiringPiKeypad *keypad, char *keypress, bool *terminator)
 	{
 		*keypress = keypad->getKey(terminator);
 
-		if (*keypress == STOP_BUTTON)
+		if (*keypress == STOP_BUTTON || !(*terminator))
 		{
 			break;
 		}
