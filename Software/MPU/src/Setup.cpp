@@ -149,13 +149,13 @@ int keypadSetup(struct Container *container, struct Args *args)
 	if (args->debugEnabled)
 		std::cout << "Setting up keypad matrix..." << std::endl;
 
-	int row[4] = {1, 2, 3, 4};
-	int column[4] = {21, 22, 23, 24};
+	int row[4] = {21, 22, 23, 24};
+	int column[4] = {1, 2, 3, 4};
 	std::vector<std::vector<char>> matrix {
-		{'1', '2', '3', 'A'},
-		{'4', '5', '6', 'B'},
-		{'7', '8', '9', 'C'},
-		{'*', '0', '#', 'D'}
+		{'D', 'C', 'B', 'A'},
+		{'#', '9', '6', '3'},
+		{'0', '8', '5', '2'},
+		{'*', '7', '4', '1'}
 	};
 
 	container->keypad = new WiringPiKeypad(4, 4);
